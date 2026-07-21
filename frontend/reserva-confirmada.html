@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>¡Reserva Confirmada! — TH Barber Club</title>
+  <link rel="icon" href="./img/logo-blue.svg" type="image/png" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" />
+  <link rel="stylesheet" href="./css/styles.css" />
+  <style>
+    .confirm-page {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      text-align: center;
+    }
+    .confirm-card {
+      background: var(--bg-card);
+      border: 1px solid rgba(201,168,76,0.2);
+      border-radius: var(--radius-xl);
+      padding: 3rem 2.5rem;
+      max-width: 480px;
+      width: 100%;
+      position: relative;
+      overflow: hidden;
+    }
+    .confirm-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--gold), var(--gold-light), var(--gold));
+    }
+    .check-anim {
+      width: 90px; height: 90px;
+      background: var(--success-dim);
+      border: 2px solid var(--success);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2.8rem;
+      color: var(--success);
+      margin: 0 auto 2rem;
+      animation: checkPop 0.7s cubic-bezier(0.34,1.56,0.64,1) both;
+    }
+    @keyframes checkPop {
+      from { transform: scale(0) rotate(-20deg); opacity: 0; }
+      to   { transform: scale(1) rotate(0deg);   opacity: 1; }
+    }
+    .confetti-piece {
+      position: fixed;
+      width: 8px; height: 8px;
+      border-radius: 2px;
+      animation: confettiFall linear forwards;
+      pointer-events: none;
+    }
+    @keyframes confettiFall {
+      0%   { transform: translateY(-20px) rotate(0deg);   opacity: 1; }
+      100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+    }
+  </style>
+</head>
+<body class="confirm-page">
+
+  <div class="confirm-card fade-in">
+    <div class="check-anim">✓</div>
+
+    <h1 style="font-size:1.8rem; margin-bottom:0.5rem;">¡Reserva <span class="text-gradient">Confirmada</span>!</h1>
+    <p class="text-muted-th mb-4">Tu turno fue agendado con éxito. Te esperamos en TH Barber Club.</p>
+
+    <div class="card-premium text-start mb-4" id="detalles-reserva" style="display:none;">
+      <div class="d-flex align-items-center gap-2 mb-3">
+        <i class="bi bi-receipt text-gold"></i>
+        <span style="font-size:0.8rem; font-weight:600; color:var(--gold); text-transform:uppercase; letter-spacing:0.08em;">Detalle de tu turno</span>
+      </div>
+      <div id="detalles-contenido"></div>
+    </div>
+
+    <div class="d-flex flex-column gap-2">
+      <a href="reserva.html" class="btn-primario justify-content-center">
+        <i class="bi bi-calendar-plus me-1"></i> Hacer otra reserva
+      </a>
+      <a href="index.html" class="btn-secundario justify-content-center">
+        <i class="bi bi-house me-1"></i> Volver al inicio
+      </a>
+
+    </div>
+
+    <div class="mt-4">
+      <img src="./img/logo-blue.svg" alt="TH Barber Club" style="height:40px; border-radius:8px; opacity:0.7;" />
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Confetti
+    const colors = ['#c9a84c','#e8c870','#4caf7d','#f5f0e8','#5b8dee'];
+    for (let i = 0; i < 60; i++) {
+      const p = document.createElement('div');
+      p.className = 'confetti-piece';
+      p.style.left       = Math.random() * 100 + 'vw';
+      p.style.top        = '-10px';
+      p.style.background = colors[Math.floor(Math.random() * colors.length)];
+      p.style.animationDuration  = (1.5 + Math.random() * 2) + 's';
+      p.style.animationDelay     = (Math.random() * 1.5) + 's';
+      document.body.appendChild(p);
+      setTimeout(() => p.remove(), 5000);
+    }
+
+    // Show details from sessionStorage if available
+    try {
+      const det = sessionStorage.getItem('reservaDetalle');
+      if (det) {
+        const d = JSON.parse(det);
+        const el = document.getElementById('detalles-reserva');
+        const cnt = document.getElementById('detalles-contenido');
+        el.style.display = '';
+        const rows = [
+          ['Servicio', d.servicio],
+          ['Fecha', d.fecha],
+          ['Horario', d.hora],
+          ['Cliente', d.nombre],
+        ].filter(r => r[1]);
+        cnt.innerHTML = rows.map(([k,v]) => `
+          <div class="d-flex justify-content-between small mb-2">
+            <span class="text-muted-th">${k}</span>
+            <span class="text-cream fw-500">${v}</span>
+          </div>`).join('');
+        sessionStorage.removeItem('reservaDetalle');
+      }
+    } catch(e){}
+  </script>
+</body>
+</html>

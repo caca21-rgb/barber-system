@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Panel Admin — Estadísticas | Barber System</title>
+  <link rel="icon" href="../img/logo-blue.svg" type="image/png" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" />
+  <link rel="stylesheet" href="../css/styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    .avatar-circle {
+      width: 34px; height: 34px;
+      background: var(--primary-dim);
+      border: 2px solid var(--primary);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.85rem; font-weight: 700; color: var(--gold-light);
+    }
+    .mobile-header {
+      display: none;
+      background: var(--bg-card);
+      border-bottom: 1px solid rgba(99,102,241,0.1);
+      padding: 1rem 1.25rem;
+      position: sticky; top: 0; z-index: 30;
+      align-items: center; gap: 1rem;
+    }
+    @media (max-width:991px) { .mobile-header { display: flex; } }
+    .sidebar-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 49;
+      backdrop-filter: blur(4px);
+    }
+    .sidebar-overlay.show { display: block; }
+    .mobile-menu-btn {
+      display: none;
+      background: var(--bg-glass);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: var(--radius-sm);
+      padding: 0.4rem 0.6rem;
+      color: var(--cream);
+      cursor: pointer;
+    }
+    @media (max-width:991px) { .mobile-menu-btn { display: flex; align-items: center; } }
+  </style>
+</head>
+<body class="admin-panel">
+
+<!-- Overlay -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<!-- Mobile Header -->
+<div class="mobile-header">
+  <button class="mobile-menu-btn" onclick="openSidebar()"><i class="bi bi-list fs-5"></i></button>
+  <img src="../img/logo-blue.svg" alt="TH" style="height:36px;border-radius:6px;object-fit:contain;" />
+  <span class="fw-bold text-gradient ms-1" style="font-family: 'Inter', sans-serif; font-size:1rem;">Estadísticas</span>
+</div>
+
+<!-- ── Sidebar ── -->
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <a href="../index.html" class="d-flex align-items-center gap-2 text-decoration-none mb-3">
+      <img src="../img/logo-blue.svg" alt="Barber System" style="height:42px;border-radius:8px;object-fit:contain;" />
+      <div>
+        <div class="text-gradient fw-bold" style="font-family: 'Inter', sans-serif; font-size:0.95rem; line-height:1.2;">Barber System</div>
+        <div style="font-size:0.7rem; color:var(--muted); letter-spacing:0.06em;">PANEL ADMIN</div>
+      </div>
+    </a>
+    <hr class="divider-gold m-0" />
+  </div>
+  <nav class="sidebar-nav">
+    <div style="font-size:0.68rem; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:0.1em; padding:0 0.5rem; margin-bottom:0.75rem;">Principal</div>
+    <a href="./panel-turnos.html" class="sidebar-nav-item">
+      <i class="bi bi-calendar-check"></i> Turnos
+    </a>
+    <a href="./panel-estadisticas.html" class="sidebar-nav-item active">
+      <i class="bi bi-graph-up-arrow"></i> Estadísticas
+    </a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="d-flex align-items-center gap-2 mb-3">
+      <div class="avatar-circle" id="adminAvatar">A</div>
+      <div>
+        <div class="text-cream" style="font-size:0.85rem; font-weight:500;" id="adminName">Administrador</div>
+        <div class="text-muted-th" style="font-size:0.72rem;" id="adminEmail">—</div>
+      </div>
+    </div>
+    <button class="sidebar-nav-item w-100 text-start border-0" onclick="cerrarSesion()" style="color:var(--danger);">
+      <i class="bi bi-box-arrow-left"></i> Cerrar sesión
+    </button>
+  </div>
+</div>
+
+<!-- ── Main ── -->
+<div class="dashboard-main">
+  <div class="dashboard-header flex-wrap gap-3">
+    <div>
+      <h1 style="font-size:clamp(1.2rem,4vw,1.6rem); margin-bottom:0.15rem;"><span class="text-gradient">Estadísticas</span></h1>
+      <p class="text-muted-th" style="font-size:0.85rem; margin:0;">
+        <i class="bi bi-bar-chart me-1"></i>Análisis y métricas de tu barbería
+      </p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+      <select class="form-control" id="filtro-periodo" onchange="actualizarEstadisticas()" style="width:auto; padding:0.45rem 0.7rem; font-size:0.82rem;">
+        <option value="7">ÚLt. 7 días</option>
+        <option value="30" selected>ÚLt. 30 días</option>
+        <option value="90">ÚLt. 90 días</option>
+        <option value="365">Este año</option>
+      </select>
+      <button class="btn-ghost" onclick="actualizarEstadisticas()">
+        <i class="bi bi-arrow-clockwise"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-xl-3">
+      <div class="kpi-card">
+        <div class="d-flex justify-content-between align-items-start mb-3">
+          <div class="kpi-icon"><i class="bi bi-sun"></i></div>
+          <span class="badge-th badge-info" id="badge-hoy">—</span>
+        </div>
+        <div class="kpi-value" id="turnos-hoy">0</div>
+        <div class="kpi-label">Turnos Hoy</div>
+        <div class="text-muted-th" style="font-size:0.75rem; margin-top:0.3rem;">vs. ayer</div>
+      </div>
+    </div>
+    <div class="col-6 col-xl-3">
+      <div class="kpi-card">
+        <div class="d-flex justify-content-between align-items-start mb-3">
+          <div class="kpi-icon" style="background:var(--success-dim);"><i class="bi bi-cash-coin" style="color:var(--success);"></i></div>
+          <span class="badge-th badge-success" id="badge-mes">—</span>
+        </div>
+        <div class="kpi-value" id="ingresos-mes" style="font-size:1.6rem; color:var(--success);">$0</div>
+        <div class="kpi-label">Ingresos del Mes</div>
+        <div class="text-muted-th" style="font-size:0.75rem; margin-top:0.3rem;">vs. mes anterior</div>
+      </div>
+    </div>
+    <div class="col-6 col-xl-3">
+      <div class="kpi-card">
+        <div class="d-flex justify-content-between align-items-start mb-3">
+          <div class="kpi-icon" style="background:var(--info-dim);"><i class="bi bi-people" style="color:var(--info);"></i></div>
+          <span class="badge-th badge-info">total</span>
+        </div>
+        <div class="kpi-value" id="clientes-unicos" style="color:var(--info);">0</div>
+        <div class="kpi-label">Clientes Registrados</div>
+      </div>
+    </div>
+    <div class="col-6 col-xl-3">
+      <div class="kpi-card">
+        <div class="d-flex justify-content-between align-items-start mb-3">
+          <div class="kpi-icon" style="background:var(--danger-dim);"><i class="bi bi-x-circle" style="color:var(--danger);"></i></div>
+          <span class="badge-th badge-danger" id="badge-cancelaciones">—</span>
+        </div>
+        <div class="kpi-value" id="cancelaciones" style="color:var(--danger);">0</div>
+        <div class="kpi-label">Cancelaciones</div>
+        <div class="text-muted-th" style="font-size:0.75rem; margin-top:0.3rem;">este mes</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts row -->
+  <div class="row g-4 mb-4">
+    <div class="col-lg-8">
+      <div class="card-estadistica p-0" style="border-radius:var(--radius-lg); overflow:hidden;">
+        <div class="p-4 pb-2 d-flex justify-content-between align-items-center">
+          <div>
+            <h6 style="font-family: 'Inter', sans-serif; font-size:1rem; margin-bottom:0.1rem;">Turnos por Día</h6>
+            <p class="text-muted-th" style="font-size:0.78rem; margin:0;">Actividad de la semana</p>
+          </div>
+          <span class="badge-th badge-info">semanal</span>
+        </div>
+        <div class="grafico-container px-3 pb-3">
+          <canvas id="grafico-turnos-dia"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-4">
+      <div class="card-estadistica p-0" style="border-radius:var(--radius-lg); overflow:hidden;">
+        <div class="p-4 pb-2">
+          <h6 style="font-family: 'Inter', sans-serif; font-size:1rem; margin-bottom:0.1rem;">Servicios</h6>
+          <p class="text-muted-th" style="font-size:0.78rem; margin:0;">Distribución por tipo</p>
+        </div>
+        <div class="grafico-container px-3 pb-3">
+          <canvas id="grafico-servicios"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Second charts row -->
+  <div class="row g-4 mb-4">
+    <div class="col-lg-6">
+      <div class="card-estadistica p-0" style="border-radius:var(--radius-lg); overflow:hidden;">
+        <div class="p-4 pb-2 d-flex justify-content-between align-items-center">
+          <div>
+            <h6 style="font-family: 'Inter', sans-serif; font-size:1rem; margin-bottom:0.1rem;">Ingresos Mensuales</h6>
+            <p class="text-muted-th" style="font-size:0.78rem; margin:0;">Últimos 12 meses</p>
+          </div>
+        </div>
+        <div class="grafico-container px-3 pb-3">
+          <canvas id="grafico-ingresos-mes"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-6">
+      <div class="card-estadistica p-4">
+        <h6 class="mb-4" style="font-family: 'Inter', sans-serif;">Servicios más populares</h6>
+        <div id="lista-servicios-populares">
+          <div class="text-center text-muted-th py-3"><small>Cargando...</small></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Monthly table -->
+  <div class="card-estadistica p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h6 style="font-family: 'Inter', sans-serif; margin:0;">Turnos por Mes</h6>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-dark table-hover">
+        <thead>
+          <tr>
+            <th>Mes</th>
+            <th>Total Turnos</th>
+            <th>Confirmados</th>
+            <th>Cancelados</th>
+            <th>Ingresos</th>
+          </tr>
+        </thead>
+        <tbody id="tabla-mensual">
+          <tr><td colspan="5" class="text-center text-muted-th py-3">Cargando...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script type="module" src="../js/panel-estadisticas.js"></script>
+<script>
+  function openSidebar()  { document.getElementById('sidebar').classList.add('open'); document.getElementById('sidebarOverlay').classList.add('show'); }
+  function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('show'); }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const nombre = localStorage.getItem('adminNombre') || 'Admin';
+    const email  = localStorage.getItem('adminEmail') || '';
+    document.getElementById('adminName').textContent  = nombre;
+    document.getElementById('adminEmail').textContent = email;
+    const avatar = document.getElementById('adminAvatar');
+    if (avatar) avatar.textContent = nombre.charAt(0).toUpperCase();
+    if (!localStorage.getItem('adminLoggedIn')) window.location.href = './login.html';
+  });
+
+  function cerrarSesion() {
+    localStorage.removeItem('adminLoggedIn');
+    localStorage.removeItem('adminEmail');
+    localStorage.removeItem('adminNombre');
+    window.location.href = './login.html';
+  }
+
+  // Chart.js global defaults
+  if (typeof Chart !== 'undefined') {
+    Chart.defaults.color = '#6b6b7a';
+    Chart.defaults.borderColor = 'rgba(99,102,241,0.08)';
+    Chart.defaults.font.family = "'Inter', sans-serif";
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Portal de Acceso - Z</title>
+  <link rel="icon" href="../img/logo-blue.svg" type="image/svg+xml" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" />
+  <link rel="stylesheet" href="../css/styles.css" />
+  <style>
+    body { background: #000814; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+    .login-card {
+      background: #0A0A0A;
+      border: 1px solid rgba(0,112,243,0.3);
+      border-radius: 16px;
+      padding: 3rem 2.5rem;
+      max-width: 420px;
+      width: 100%;
+      box-shadow: 0 0 60px rgba(0,112,243,0.12);
+    }
+    .badge-superadmin {
+      background: rgba(0,112,243,0.15);
+      border: 1px solid rgba(0,112,243,0.4);
+      color: #3291FF;
+      font-size: 0.7rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: 999px;
+    }
+    .form-control {
+      background: #111 !important;
+      border-color: rgba(255,255,255,0.1) !important;
+      color: #fff !important;
+      border-radius: 8px;
+    }
+    .form-control:focus { border-color: #0070F3 !important; box-shadow: 0 0 0 3px rgba(0,112,243,0.2) !important; }
+    .btn-primary-th {
+      background: #0070F3; border: none; border-radius: 8px;
+      font-weight: 600; padding: 0.75rem;
+      transition: all 0.25s; width: 100%;
+    }
+    .btn-primary-th:hover { background: #3291FF; transform: translateY(-1px); box-shadow: 0 8px 20px rgba(0,112,243,0.4); }
+    .alert-error { background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.3); color: #fca5a5; border-radius: 8px; padding: 12px 16px; font-size: 0.9rem; }
+    .text-muted-th { color: #64748B; font-size: 0.875rem; }
+  </style>
+</head>
+<body>
+  <div class="login-card">
+    <div class="text-center mb-4">
+      <img src="../img/logo-blue.svg" alt="Barber System" style="height:60px; margin-bottom:1.2rem;" />
+      <h4 class="mb-1 text-white">Portal Z</h4>
+      <p class="text-muted-th">Acceso restringido</p>
+    </div>
+
+    <div id="errorMsg" class="alert-error mb-3 d-none"></div>
+
+    <form id="loginForm">
+      <div class="mb-3">
+        <label class="form-label small text-muted" for="email">Email</label>
+        <div class="input-group">
+          <span class="input-group-text" style="background:#111;border-color:rgba(255,255,255,0.1);color:#64748B;">
+            <i class="bi bi-envelope"></i>
+          </span>
+          <input type="email" id="email" class="form-control" placeholder="admin@barbersystem.com" required />
+        </div>
+      </div>
+      <div class="mb-4">
+        <label class="form-label small text-muted" for="password">Contraseña</label>
+        <div class="input-group">
+          <span class="input-group-text" style="background:#111;border-color:rgba(255,255,255,0.1);color:#64748B;">
+            <i class="bi bi-lock"></i>
+          </span>
+          <input type="password" id="password" class="form-control" placeholder="••••••••" required />
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary btn-primary-th">
+        <i class="bi bi-shield-check me-2"></i>Ingresar
+      </button>
+    </form>
+  </div>
+
+  <script type="module">
+    import { API_BASE_URL } from '../js/config.js';
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const errorDiv = document.getElementById('errorMsg');
+      errorDiv.classList.add('d-none');
+
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/barberias/superadmin/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+
+        if (res.ok) {
+          sessionStorage.setItem('superadmin', JSON.stringify({ email, password }));
+          window.location.href = './overview.html';
+        } else {
+          const msg = await res.text();
+          errorDiv.textContent = msg || 'Credenciales inválidas';
+          errorDiv.classList.remove('d-none');
+        }
+      } catch (err) {
+        errorDiv.textContent = 'Error de conexión con el servidor';
+        errorDiv.classList.remove('d-none');
+      }
+    });
+  </script>
+</body>
+</html>

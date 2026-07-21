@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title id="pageTitle">Barber System</title>
+  <meta name="description" content="Reserva tu turno online" />
+  <link rel="icon" href="./img/logo-blue.svg" type="image/png" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" />
+  <link rel="stylesheet" href="./css/styles.css" />
+  <style>
+    /* ── Multi-tenant UI ── */
+    #tenantName { transition: opacity 0.3s; }
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      padding: 2rem 1rem;
+    }
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 70% 60% at 50% 80%, rgba(0,212,255,0.08) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 40% at 80% 20%, rgba(0,212,255,0.05) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .hero-particles {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+    .particle {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      background: var(--accent);
+      border-radius: 50%;
+      opacity: 0;
+      animation: particleFloat var(--dur, 6s) var(--delay, 0s) ease-in-out infinite;
+    }
+    @keyframes particleFloat {
+      0%   { opacity: 0; transform: translateY(0) scale(0); }
+      20%  { opacity: 0.6; }
+      80%  { opacity: 0.3; }
+      100% { opacity: 0; transform: translateY(-120px) scale(1.5); }
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--accent-dim);
+      border: 1px solid rgba(0,212,255,0.3);
+      border-radius: var(--radius-pill);
+      padding: 0.4rem 1.2rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--accent-light);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 1.75rem;
+      animation: fadeSlideIn 0.8s ease both;
+    }
+    .hero-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2.8rem, 8vw, 6rem);
+      font-weight: 900;
+      line-height: 1.05;
+      margin-bottom: 1.5rem;
+      animation: fadeSlideIn 0.8s 0.1s ease both;
+    }
+    .hero-subtitle {
+      font-size: clamp(1rem, 2.5vw, 1.25rem);
+      color: var(--muted-light);
+      max-width: 520px;
+      margin: 0 auto 2.5rem;
+      font-weight: 300;
+      animation: fadeSlideIn 0.8s 0.2s ease both;
+    }
+    .hero-cta {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      animation: fadeSlideIn 0.8s 0.3s ease both;
+    }
+    .hero-scroll {
+      position: absolute;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      color: var(--muted);
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      animation: bounce 2s ease-in-out infinite;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    @keyframes bounce {
+      0%,100%{ transform: translateX(-50%) translateY(0); }
+      50%    { transform: translateX(-50%) translateY(8px); }
+    }
+
+    /* ── Divider ornament ── */
+    .ornament {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin: 0 auto 3rem;
+      max-width: 300px;
+    }
+    .ornament-line { flex: 1; height: 1px; background: linear-gradient(90deg, transparent, var(--accent)); opacity: 0.4; }
+    .ornament-line.right { background: linear-gradient(90deg, var(--accent), transparent); }
+    .ornament-icon { color: var(--accent); font-size: 1.1rem; opacity: 0.8; }
+
+    /* ── Services section ── */
+    .services-section {
+      padding: 6rem 0;
+      position: relative;
+    }
+    .service-card {
+      background: var(--bg-card);
+      border: 1px solid rgba(0,212,255,0.12);
+      border-radius: var(--radius-lg);
+      padding: 2.5rem 2rem;
+      text-align: center;
+      transition: var(--transition);
+      height: 100%;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+    }
+    .service-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      opacity: 0;
+      transition: var(--transition);
+    }
+    .service-card:hover {
+      transform: translateY(-8px);
+      border-color: var(--accent-glow);
+      box-shadow: var(--shadow-glow);
+    }
+    .service-card:hover::before { opacity: 1; }
+    .service-icon {
+      width: 72px; height: 72px;
+      background: var(--accent-dim);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 1.5rem;
+      font-size: 2rem;
+      transition: var(--transition);
+    }
+    .service-card:hover .service-icon {
+      background: var(--accent);
+      transform: scale(1.1) rotate(5deg);
+    }
+    .service-card:hover .service-icon i { color: #0a0a0f; }
+    .service-icon i { color: var(--accent); }
+    .service-price {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem;
+      color: var(--accent-light);
+      font-weight: 700;
+    }
+    .service-duration {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-top: 0.25rem;
+    }
+
+    /* ── Why us ── */
+    .why-section { padding: 5rem 0; background: var(--bg-card); position: relative; }
+    .why-item {
+      display: flex;
+      gap: 1.25rem;
+      align-items: flex-start;
+      padding: 1.5rem;
+      border-radius: var(--radius-md);
+      transition: var(--transition);
+    }
+    .why-item:hover { background: var(--bg-glass); }
+    .why-number {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem;
+      font-weight: 900;
+      color: var(--accent-dim);
+      line-height: 1;
+      min-width: 2rem;
+    }
+
+    /* ── CTA Banner ── */
+    .cta-banner {
+      margin: 4rem 0;
+      padding: 4rem 2rem;
+      background:
+        linear-gradient(135deg, rgba(0,212,255,0.08) 0%, transparent 60%),
+        var(--bg-card);
+      border: 1px solid rgba(0,212,255,0.2);
+      border-radius: var(--radius-xl);
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .cta-banner::before {
+      content: '✂';
+      position: absolute;
+      font-size: 12rem;
+      color: rgba(0,212,255,0.03);
+      top: -2rem; right: -2rem;
+      pointer-events: none;
+    }
+
+    /* ── Footer ── */
+    .footer-th {
+      background: var(--bg-card);
+      border-top: 1px solid rgba(0,212,255,0.1);
+      padding: 3rem 0 1.5rem;
+    }
+    .footer-link {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.875rem;
+      transition: var(--transition);
+    }
+    .footer-link:hover { color: var(--accent-light); }
+    .social-btn {
+      width: 40px; height: 40px;
+      border-radius: var(--radius-md);
+      background: var(--bg-glass);
+      border: 1px solid rgba(255,255,255,0.08);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--muted-light);
+      font-size: 1.1rem;
+      text-decoration: none;
+      transition: var(--transition);
+    }
+    .social-btn:hover { background: var(--accent-dim); color: var(--accent-light); border-color: var(--accent-dim); }
+    /* ── Navbar mobile ── */
+    @media (max-width: 576px) {
+      .hero-title { font-size: clamp(2rem, 10vw, 4rem); }
+      .hero-badge { font-size: 0.72rem; padding: 0.35rem 0.9rem; margin-bottom: 1.25rem; }
+      .hero-cta { flex-direction: column; align-items: center; }
+      .hero-cta a { width: 100%; max-width: 280px; justify-content: center; }
+      .services-section { padding: 3.5rem 0; }
+      .why-section { padding: 3rem 0; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Navbar ── -->
+  <nav class="navbar-th d-flex align-items-center justify-content-between" style="z-index:100;">
+    <a href="index.html" class="d-flex align-items-center gap-2 text-decoration-none">
+      <img src="./img/logo-blue.svg" alt="Barber System" style="height:40px; object-fit:contain; border-radius:8px;" />
+      <span class="d-none d-sm-block fw-bold text-gradient" style="font-family:'Playfair Display',serif; font-size:1.1rem;">Barber System</span>
+    </a>
+    <a href="reserva.html" class="btn-primario" style="padding:0.5rem 1.1rem; font-size:0.82rem;">
+      <i class="bi bi-calendar-check"></i>
+      <span class="d-none d-sm-inline">Reservar</span>
+      <span class="d-sm-none">Reservar</span>
+    </a>
+  </nav>
+
+  <!-- ── Hero ── -->
+  <section class="hero" id="inicio">
+    <div class="hero-bg"></div>
+    <div class="hero-particles" id="particles"></div>
+
+    <div class="position-relative" style="z-index:1;">
+      <div class="hero-badge mb-4">
+        <i class="bi bi-stars"></i>
+        <span>Experiencia Premium</span>
+      </div>
+      <h1 class="display-3 mb-3 fw-bold">
+        Bienvenido a <br class="d-md-none" />
+        <span class="text-gradient" id="tenantName">Barber System</span>
+      </h1>
+      <p class="lead text-muted-th mb-5 mx-auto" style="max-width: 600px;">
+        El arte del buen corte. Reservá tu turno online de manera rápida y segura.
+      </p>
+      
+      <div class="d-flex flex-wrap justify-content-center gap-3">
+        <a href="reserva.html" id="btnReservarHero" class="btn-primario">
+          <i class="bi bi-calendar2-check"></i>
+          Reservar Turno
+        </a>
+        <a href="#servicios" class="btn-secundario">
+          Explorar Servicios
+        </a>
+      </div>
+    </div>
+
+    <div class="hero-scroll">
+      <span>Descubrí más</span>
+      <i class="bi bi-chevron-down"></i>
+    </div>
+  </section>
+
+
+  <!-- ── Why Us ── -->
+  <section class="why-section">
+    <div class="container">
+      <div class="row align-items-center g-5">
+        <div class="col-lg-6">
+          <div class="ornament justify-content-start">
+            <i class="bi bi-award ornament-icon" style="font-size:1.3rem;"></i>
+            <div class="ornament-line right" style="max-width:80px;"></div>
+          </div>
+          <h2 class="mb-4" style="font-size:clamp(1.8rem,4vw,2.8rem);">
+            ¿Por qué elegirnos?
+          </h2>
+          <div class="d-flex flex-column gap-2">
+            <div class="why-item">
+              <div class="why-number">01</div>
+              <div>
+                <h6 class="text-accent mb-1">Barberos Expertos</h6>
+                <p class="text-muted-th small mb-0">Más de 5 años de experiencia. Cada profesional es un artista.</p>
+              </div>
+            </div>
+            <div class="why-item">
+              <div class="why-number">02</div>
+              <div>
+                <h6 class="text-accent mb-1">Reservas Online 24/7</h6>
+                <p class="text-muted-th small mb-0">Agendá tu turno cuando quieras, sin esperas ni llamadas.</p>
+              </div>
+            </div>
+            <div class="why-item">
+              <div class="why-number">03</div>
+              <div>
+                <h6 class="text-accent mb-1">Ambiente Premium</h6>
+                <p class="text-muted-th small mb-0">Un espacio diseñado para que te sientas como en casa... pero mejor.</p>
+              </div>
+            </div>
+            <div class="why-item">
+              <div class="why-number">04</div>
+              <div>
+                <h6 class="text-accent mb-1">Productos de Calidad</h6>
+                <p class="text-muted-th small mb-0">Solo usamos marcas premium para el cuidado de tu cabello y barba.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="row g-3">
+            <div class="col-6">
+              <div class="kpi-card text-center">
+                <div class="kpi-value">500+</div>
+                <div class="kpi-label">Clientes felices</div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="kpi-card text-center">
+                <div class="kpi-value">5★</div>
+                <div class="kpi-label">Calificación</div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="kpi-card text-center">
+                <div class="kpi-value">3</div>
+                <div class="kpi-label">Servicios premium</div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="kpi-card text-center">
+                <div class="kpi-value">5+</div>
+                <div class="kpi-label">Años de experiencia</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── CTA Banner ── -->
+  <section class="py-5">
+    <div class="container">
+      <div class="cta-banner">
+        <h2 class="mb-3" style="font-size:clamp(1.6rem,4vw,2.8rem);">¿Listo para tu próximo <span class="text-gradient">look</span>?</h2>
+        <p class="text-muted-th mb-4">Reservá tu turno en segundos.</p>
+        <a href="reserva.html" id="btnReservarCta" class="btn-primario" style="font-size:1rem; padding:0.9rem 2.5rem;">
+          <i class="bi bi-calendar-heart"></i>
+          Reservar ahora
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Footer ── -->
+  <footer class="footer-th">
+    <div class="container">
+      <div class="row g-4 mb-4">
+        <div class="col-12 col-md-4">
+          <img src="./img/logo-blue.svg" alt="Barber System" style="height:50px; border-radius:8px; margin-bottom:1rem;" />
+          <p class="text-muted-th small">Un nuevo concepto de barbería premium. Estilo, precisión y dedicación en cada corte.</p>
+        </div>
+      </div>
+      <hr class="divider-accent" />
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <small class="text-muted-th">© 2026 Barber System. Todos los derechos reservados.</small>
+
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+  <script>
+    // Particles
+    const container = document.getElementById('particles');
+    if (container) {
+      for (let i = 0; i < 30; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        p.style.left   = Math.random() * 100 + '%';
+        p.style.bottom = Math.random() * 40 + '%';
+        p.style.setProperty('--dur',   (4 + Math.random() * 6) + 's');
+        p.style.setProperty('--delay', (Math.random() * 6) + 's');
+        container.appendChild(p);
+      }
+    }
+
+    // GSAP ScrollTrigger Integration
+    gsap.registerPlugin(ScrollTrigger);
+
+    gsap.utils.toArray('.why-item, .kpi-card').forEach(el => {
+      gsap.from(el, {
+        opacity: 0,
+        y: 24,
+        duration: 0.5,
+        ease: 'power2.out',
+        scrollTrigger: {
+          trigger: el,
+          start: 'top 85%',
+          toggleActions: 'play none none reverse'
+        }
+      });
+    });
+
+    gsap.from('.cta-banner', {
+      opacity: 0,
+      scale: 0.95,
+      duration: 0.6,
+      ease: 'power2.out',
+      scrollTrigger: {
+        trigger: '.cta-banner',
+        start: 'top 80%'
+      }
+    });
+  </script>
+  
+  <script type="module">
+    import { API_BASE_URL, getSlugFromUrl, setBarberiaSession } from './js/config.js';
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const slug = getSlugFromUrl();
+      if (!slug) {
+        document.body.innerHTML = `
+          <div style="height: 100vh; display: flex; align-items: center; justify-content: center; flex-direction: column; background: #000814; color: #fff; text-align: center; padding: 2rem;">
+            <h1 style="color: #EF4444; margin-bottom: 1rem;">Error</h1>
+            <p>La URL es incorrecta. Por favor usa el link proporcionado por tu barbería.</p>
+          </div>
+        `;
+        return;
+      }
+
+      // Propagar el slug en los links de reserva
+      document.getElementById('btnReservarHero').href = `reserva.html?slug=${slug}`;
+      document.getElementById('btnReservarCta').href = `reserva.html?slug=${slug}`;
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/barberias/slug/${slug}`);
+        if (!res.ok) {
+          const msg = await res.text();
+          document.body.innerHTML = `
+            <div style="height: 100vh; display: flex; align-items: center; justify-content: center; flex-direction: column; background: #000814; color: #fff; text-align: center; padding: 2rem;">
+              <h1 style="color: #EF4444; margin-bottom: 1rem;">No disponible</h1>
+              <p>${msg || 'Barbería no encontrada o desactivada.'}</p>
+            </div>
+          `;
+          return;
+        }
+
+        const data = await res.json();
+        // Guardar barberia en sessionStorage para reserva.html
+        setBarberiaSession(data);
+        
+        // Actualizar UI
+        document.getElementById('pageTitle').textContent = data.nombreNegocio;
+        document.getElementById('tenantName').textContent = data.nombreNegocio;
+
+      } catch (err) {
+        console.error('Error fetching barberia:', err);
+      }
+    });
+  </script>
+
+</body>
+</html>
+
+
