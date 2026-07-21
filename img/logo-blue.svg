@@ -1,0 +1,48 @@
+<svg width="160" height="160" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Outer ring -->
+  <circle cx="80" cy="80" r="76" stroke="#0070F3" stroke-width="3" fill="none" opacity="0.3"/>
+  <!-- Inner ring -->
+  <circle cx="80" cy="80" r="66" stroke="#0070F3" stroke-width="1.5" fill="none" opacity="0.5"/>
+  <!-- Background circle -->
+  <circle cx="80" cy="80" r="60" fill="#000814"/>
+  <!-- Scissors blade left -->
+  <g transform="translate(80,80) rotate(-30)">
+    <ellipse cx="-18" cy="-8" rx="20" ry="5" fill="#0070F3" opacity="0.9"/>
+    <circle cx="-34" cy="-8" r="7" fill="none" stroke="#0070F3" stroke-width="2.5"/>
+    <!-- screw -->
+    <circle cx="0" cy="0" r="3.5" fill="#3291FF"/>
+  </g>
+  <!-- Scissors blade right -->
+  <g transform="translate(80,80) rotate(30)">
+    <ellipse cx="-18" cy="8" rx="20" ry="5" fill="#0070F3" opacity="0.9"/>
+    <circle cx="-34" cy="8" r="7" fill="none" stroke="#0070F3" stroke-width="2.5"/>
+  </g>
+  <!-- Handle left -->
+  <g transform="translate(80,80) rotate(-30)">
+    <rect x="2" y="-4.5" width="26" height="9" rx="4.5" fill="#0070F3" opacity="0.8"/>
+    <rect x="28" y="-3" width="10" height="6" rx="3" fill="#1d4ed8" opacity="0.9"/>
+  </g>
+  <!-- Handle right -->
+  <g transform="translate(80,80) rotate(30)">
+    <rect x="2" y="-4.5" width="26" height="9" rx="4.5" fill="#0070F3" opacity="0.8"/>
+    <rect x="28" y="-3" width="10" height="6" rx="3" fill="#1d4ed8" opacity="0.9"/>
+  </g>
+  <!-- Comb lines below -->
+  <g transform="translate(80,80)">
+    <rect x="-22" y="20" width="44" height="3" rx="1.5" fill="#0070F3" opacity="0.5"/>
+    <line x1="-18" y1="23" x2="-18" y2="32" stroke="#0070F3" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+    <line x1="-11" y1="23" x2="-11" y2="34" stroke="#0070F3" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+    <line x1="-4"  y1="23" x2="-4"  y2="35" stroke="#0070F3" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+    <line x1="3"   y1="23" x2="3"   y2="35" stroke="#0070F3" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+    <line x1="10"  y1="23" x2="10"  y2="34" stroke="#0070F3" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+    <line x1="17"  y1="23" x2="17"  y2="32" stroke="#0070F3" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+  </g>
+  <!-- Glow effect -->
+  <circle cx="80" cy="80" r="60" fill="url(#glow)" opacity="0.05"/>
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#0070F3"/>
+      <stop offset="100%" stop-color="#0070F3" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+</svg>

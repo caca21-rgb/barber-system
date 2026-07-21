@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Panel Admin — Gestión de Turnos | Barber System</title>
+  <link rel="icon" href="../img/logo-blue.svg" type="image/png" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" />
+  <link rel="stylesheet" href="../css/styles.css" />
+  <style>
+    .avatar-circle {
+      width: 38px; height: 38px;
+      background: linear-gradient(135deg, var(--primary), #818cf8);
+      border: 2px solid rgba(255,255,255,0.1);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem; font-weight: 700; color: #fff;
+      box-shadow: 0 4px 10px rgba(99,102,241,0.4);
+    }
+    
+    /* Enhanced Glassmorphism for the panel */
+    .admin-panel {
+      background: radial-gradient(circle at top left, #1e1b4b, #000 70%);
+    }
+    .sidebar {
+      background: rgba(15, 23, 42, 0.4);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-right: 1px solid rgba(255, 255, 255, 0.05);
+      box-shadow: 4px 0 24px rgba(0,0,0,0.2);
+    }
+    .card-premium {
+      background: rgba(30, 41, 59, 0.4) !important;
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08) !important;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .card-premium:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 40px rgba(99,102,241,0.15);
+      border-color: rgba(99,102,241,0.3) !important;
+    }
+
+    .table-action-btn {
+      padding: 0.4rem 0.7rem;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .btn-confirm  { background: rgba(16, 185, 129, 0.15); color: #34d399; border-color: rgba(16, 185, 129, 0.3); }
+    .btn-confirm:hover  { background: #10b981; color: #fff; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(16,185,129,0.3); }
+    .btn-cancel-a { background: rgba(239, 68, 68, 0.15);  color: #f87171;  border-color: rgba(239, 68, 68, 0.3); }
+    .btn-cancel-a:hover  { background: #ef4444; color: #fff; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(239,68,68,0.3); }
+    .btn-edit-a   { background: rgba(59, 130, 246, 0.15);    color: #60a5fa;    border-color: rgba(59, 130, 246, 0.3); }
+    .btn-edit-a:hover    { background: #3b82f6;    color: #fff; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(59,130,246,0.3); }
+
+    .search-box {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: var(--radius-pill);
+      padding: 0.6rem 1.1rem 0.6rem 2.8rem;
+      color: #fff;
+      font-size: 0.95rem;
+      width: 320px;
+      max-width: 100%;
+      backdrop-filter: blur(8px);
+      transition: all 0.3s ease;
+    }
+    .search-box:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 15px rgba(99,102,241,0.4); background: rgba(15, 23, 42, 0.9); }
+    .search-box::placeholder { color: rgba(255,255,255,0.4); }
+    .search-wrapper { position: relative; flex: 1; min-width: 160px; }
+    .search-wrapper .bi-search { position: absolute; left: 1.1rem; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,0.5); font-size: 1.1rem; }
+    @media (max-width: 768px) {
+      .search-box { width: 100%; }
+    }
+
+    /* Loading state animation */
+    .loading-pulse {
+      animation: pulse 1.5s infinite ease-in-out;
+      color: var(--primary-light);
+      font-weight: 600;
+      letter-spacing: 1px;
+    }
+    @keyframes pulse {
+      0% { opacity: 0.5; transform: scale(0.98); }
+      50% { opacity: 1; transform: scale(1); }
+      100% { opacity: 0.5; transform: scale(0.98); }
+    }
+
+    /* Filters redesign */
+    .filters-container {
+      background: rgba(30, 41, 59, 0.5);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 12px;
+      padding: 0.5rem;
+      display: inline-flex;
+      gap: 0.25rem;
+    }
+    .filter-tab {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-weight: 500;
+      font-size: 0.9rem;
+      transition: all 0.2s ease;
+    }
+    .filter-tab:hover { color: #fff; background: rgba(255,255,255,0.05); }
+    .filter-tab.active { background: var(--primary); color: #fff; box-shadow: 0 2px 8px rgba(99,102,241,0.3); }
+
+    .mobile-menu-btn {
+      display: none;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      padding: 0.5rem 0.7rem;
+      color: #fff;
+      cursor: pointer;
+    }
+    @media (max-width:991px) { .mobile-menu-btn { display: flex; align-items: center; } }
+    .sidebar-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 49;
+      backdrop-filter: blur(8px);
+    }
+    .sidebar-overlay.show { display: block; }
+
+    .empty-state { padding: 4rem 2rem; text-align: center; color: var(--muted); }
+    .empty-state i { font-size: 4rem; display: block; margin-bottom: 1.5rem; color: rgba(255,255,255,0.1); }
+    .empty-state p { font-size: 1.1rem; }
+
+    .mobile-header {
+      display: none;
+      background: rgba(15, 23, 42, 0.8);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      padding: 1rem 1.25rem;
+      position: sticky; top: 0; z-index: 30;
+      align-items: center; gap: 1rem;
+    }
+    @media (max-width:991px) { .mobile-header { display: flex; } }
+  </style>
+</head>
+<body class="admin-panel">
+
+<!-- ── Sidebar overlay (mobile) ── -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<!-- ── Mobile Header ── -->
+<div class="mobile-header">
+  <button class="mobile-menu-btn" onclick="openSidebar()">
+    <i class="bi bi-list fs-5"></i>
+  </button>
+  <img src="../img/logo-blue.svg" alt="Barber System" style="height:36px;border-radius:6px;object-fit:contain;" />
+  <span class="fw-bold text-gradient ms-1" style="font-family: 'Inter', sans-serif; font-size:1rem;">Panel Admin</span>
+</div>
+
+<!-- ── Sidebar ── -->
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <a href="../index.html" class="d-flex align-items-center gap-2 text-decoration-none mb-3">
+      <img src="../img/logo-blue.svg" alt="Barber System" style="height:42px;border-radius:8px;object-fit:contain;" />
+      <div>
+        <div class="text-gradient fw-bold" style="font-family: 'Inter', sans-serif; font-size:0.95rem; line-height:1.2;">Barber System</div>
+        <div style="font-size:0.7rem; color:var(--muted); letter-spacing:0.06em;">PANEL ADMIN</div>
+      </div>
+    </a>
+    <hr class="divider-gold m-0" />
+  </div>
+
+  <nav class="sidebar-nav">
+    <div style="font-size:0.68rem; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:0.1em; padding:0 0.5rem; margin-bottom:0.75rem;">Principal</div>
+    <a href="./panel-turnos.html" class="sidebar-nav-item active" id="nav-turnos">
+      <i class="bi bi-calendar-check"></i> Turnos
+    </a>
+    <a href="./panel-estadisticas.html" class="sidebar-nav-item" id="nav-estadisticas">
+      <i class="bi bi-graph-up-arrow"></i> Estadísticas
+    </a>
+
+    <div style="font-size:0.68rem; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:0.1em; padding:0 0.5rem; margin:1.25rem 0 0.75rem;">Vistas</div>
+    <button class="sidebar-nav-item w-100 text-start border-0" onclick="cambiarVista('lista')" id="nav-lista">
+      <i class="bi bi-list-ul"></i> Vista Lista
+    </button>
+    <button class="sidebar-nav-item w-100 text-start border-0" onclick="cambiarVista('calendario')" id="nav-calendario">
+      <i class="bi bi-calendar3"></i> Vista Calendario
+    </button>
+    <button class="sidebar-nav-item w-100 text-start border-0" onclick="cambiarVista('configuracion')" id="nav-configuracion">
+      <i class="bi bi-gear"></i> Configuración
+    </button>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="d-flex align-items-center gap-2 mb-3">
+      <div class="avatar-circle" id="adminAvatar">A</div>
+      <div>
+        <div class="text-cream" style="font-size:0.85rem; font-weight:500;" id="adminName">Administrador</div>
+        <div class="text-muted-th" style="font-size:0.72rem;" id="adminEmail">—</div>
+      </div>
+    </div>
+    <button class="sidebar-nav-item w-100 text-start border-0" onclick="cerrarSesion()" style="color:var(--danger);">
+      <i class="bi bi-box-arrow-left"></i> Cerrar sesión
+    </button>
+  </div>
+</div>
+
+<!-- ── Main content ── -->
+<div class="dashboard-main">
+
+  <!-- Dashboard Header -->
+  <div class="dashboard-header flex-wrap gap-3">
+    <div>
+      <h1 style="font-size:clamp(1.2rem,4vw,1.6rem); margin-bottom:0.15rem;">Gestión de <span class="text-gradient">Turnos</span></h1>
+      <p class="text-muted-th" style="font-size:0.85rem; margin:0;">
+        <i class="bi bi-clock me-1"></i><span id="fechaHoy">—</span>
+      </p>
+    </div>
+    <div class="d-flex align-items-center gap-2 flex-wrap w-100">
+      <div class="search-wrapper flex-grow-1" style="max-width:300px;">
+        <i class="bi bi-search"></i>
+        <input type="text" class="search-box" id="buscar-turno" placeholder="Buscar cliente..." />
+      </div>
+      <div class="d-flex gap-2 ms-auto flex-wrap">
+        <button class="btn-secundario" onclick="mostrarModalBloqueo()" title="Bloquear horario">
+          <i class="bi bi-calendar-x"></i> <span class="d-none d-md-inline ms-1">Bloquear</span>
+        </button>
+        <button class="btn-primario" onclick="mostrarModalIngreso()" title="Registrar ingreso manual">
+          <i class="bi bi-cash-coin"></i> <span class="d-none d-md-inline ms-1">Ingreso</span>
+        </button>
+        <button class="btn-ghost" onclick="window.turnosManager?.refreshData()" title="Actualizar">
+          <i class="bi bi-arrow-clockwise"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Connection alert -->
+  <div id="connection-status" class="alert alert-warning d-none mb-3" role="alert">
+    <i class="bi bi-wifi-off me-2"></i>Sin conexión — Los datos se sincronizarán automáticamente
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="row g-3 mb-4" id="stats-summary">
+    <div class="col-6 col-xl-3">
+      <div class="kpi-card">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div class="kpi-icon"><i class="bi bi-calendar3"></i></div>
+          <span class="badge-th badge-muted" style="font-size:0.7rem;">total</span>
+        </div>
+        <div class="kpi-value" id="stats-total">0</div>
+        <div class="kpi-label">Total Turnos</div>
+      </div>
+    </div>
+    <div class="col-6 col-xl-3">
+      <div class="kpi-card">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div class="kpi-icon" style="background:var(--success-dim);"><i class="bi bi-check-circle" style="color:var(--success);"></i></div>
+          <span class="badge-th badge-success" style="font-size:0.7rem;">ok</span>
+        </div>
+        <div class="kpi-value" id="stats-confirmados" style="color:var(--success);">0</div>
+        <div class="kpi-label">Confirmados</div>
+      </div>
+    </div>
+    <div class="col-6 col-xl-3">
+      <div class="kpi-card">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div class="kpi-icon" style="background:var(--warning-dim);"><i class="bi bi-hourglass-split" style="color:var(--warning);"></i></div>
+          <span class="badge-th badge-warning" style="font-size:0.7rem;">pendiente</span>
+        </div>
+        <div class="kpi-value" id="stats-pendientes" style="color:var(--warning);">0</div>
+        <div class="kpi-label">Pendientes</div>
+      </div>
+    </div>
+    <div class="col-6 col-xl-3">
+      <div class="kpi-card">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div class="kpi-icon" style="background:var(--info-dim);"><i class="bi bi-cash-stack" style="color:var(--info);"></i></div>
+          <span class="badge-th badge-info" style="font-size:0.7rem;">hoy</span>
+        </div>
+        <div class="kpi-value" id="stats-ingresos" style="font-size:1.6rem;">$0</div>
+        <div class="kpi-label">Ingresos Hoy</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filtros-container mb-4">
+    <div class="d-flex flex-wrap align-items-center gap-2">
+      <!-- Status tabs -->
+      <div class="tab-filter">
+        <button class="tab-filter-btn active" id="tab-todos" onclick="setStatusFilter('todos')">Todos</button>
+        <button class="tab-filter-btn" id="tab-pendiente" onclick="setStatusFilter('pendiente')">Pend.</button>
+        <button class="tab-filter-btn" id="tab-confirmado" onclick="setStatusFilter('confirmado')">Conf.</button>
+        <button class="tab-filter-btn" id="tab-cancelado" onclick="setStatusFilter('cancelado')">Canc.</button>
+      </div>
+
+      <!-- Period filter -->
+      <select class="form-control" id="filtro-fecha" style="width:auto; padding:0.45rem 0.7rem; font-size:0.82rem;" onchange="aplicarFiltros()">
+        <option value="hoy">Hoy</option>
+        <option value="manana">Mañana</option>
+        <option value="semana">Esta semana</option>
+        <option value="mes">Este mes</option>
+        <option value="todos" selected>Todos</option>
+      </select>
+
+      <!-- Date range (hidden on xs) -->
+      <div class="d-none d-md-flex gap-2 align-items-center">
+        <input type="date" class="form-control" id="filtro-fecha-desde" style="padding:0.45rem 0.7rem; font-size:0.82rem; width:auto;" />
+        <span class="text-muted-th small">—</span>
+        <input type="date" class="form-control" id="filtro-fecha-hasta" style="padding:0.45rem 0.7rem; font-size:0.82rem; width:auto;" />
+      </div>
+
+      <button class="btn-ghost" onclick="limpiarFiltros()" title="Limpiar filtros">
+        <i class="bi bi-x-circle"></i>
+      </button>
+
+      <div class="ms-auto">
+        <span class="badge-th badge-info" id="total-turnos">0 turnos</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vista List / Calendar -->
+  <div id="vista-lista" class="vista-activa">
+    <div class="card-premium p-0" style="overflow:hidden;">
+      <div class="table-responsive" style="-webkit-overflow-scrolling:touch;">
+        <table class="table table-dark table-hover mb-0" id="tabla-turnos" style="min-width:520px;">
+          <thead>
+            <tr>
+              <th style="cursor:pointer; padding:0.75rem 1rem; white-space:nowrap;" onclick="sortTable('fecha')">
+                Fecha <i class="bi bi-arrow-up-down ms-1 opacity-50"></i>
+              </th>
+              <th style="cursor:pointer; white-space:nowrap;" onclick="sortTable('hora')">
+                Hora <i class="bi bi-arrow-up-down ms-1 opacity-50"></i>
+              </th>
+              <th style="cursor:pointer; white-space:nowrap;" onclick="sortTable('cliente')">
+                Cliente <i class="bi bi-arrow-up-down ms-1 opacity-50"></i>
+              </th>
+              <th class="d-none d-lg-table-cell" style="white-space:nowrap;">Teléfono</th>
+              <th class="d-none d-sm-table-cell" style="cursor:pointer; white-space:nowrap;" onclick="sortTable('servicio')">
+                Servicio <i class="bi bi-arrow-up-down ms-1 opacity-50"></i>
+              </th>
+              <th style="cursor:pointer; white-space:nowrap;" onclick="sortTable('precio')">
+                $ <i class="bi bi-arrow-up-down ms-1 opacity-50"></i>
+              </th>
+              <th style="white-space:nowrap;">Estado</th>
+              <th style="white-space:nowrap;">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tabla-turnos-body">
+            <tr>
+              <td colspan="8" class="empty-state">
+                <i class="bi bi-hourglass-split loading-pulse"></i>
+                <p class="loading-pulse">Sincronizando turnos con el servidor...</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vista Calendario -->
+  <div id="vista-calendario" class="vista-oculta">
+    <div class="card-premium mb-3">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <button class="btn-ghost" id="btn-prev-mes" onclick="navegarMes(-1)">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+        <h5 class="mb-0 text-gradient" id="mes-actual" style="font-family: 'Inter', sans-serif;"></h5>
+        <button class="btn-ghost" id="btn-next-mes" onclick="navegarMes(1)">
+          <i class="bi bi-chevron-right"></i>
+        </button>
+      </div>
+      <div class="calendario-grid" id="calendario-grid"></div>
+    </div>
+    <div class="card-premium" id="detalle-dia" style="display:none;">
+      <h6 class="text-gold mb-3" id="detalle-dia-titulo"></h6>
+      <div id="detalle-dia-turnos"></div>
+    </div>
+  </div>
+
+  <!-- Vista Configuración -->
+  <div id="vista-configuracion" class="vista-oculta">
+    <div class="card-premium">
+      <div class="d-flex align-items-center mb-4">
+        <div class="icon-box icon-gold me-3">
+          <i class="bi bi-clock-history"></i>
+        </div>
+        <h5 class="mb-0 text-cream">Horarios de Atención</h5>
+      </div>
+      
+      <form id="formConfiguracion" class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label text-muted-th small">Hora de Apertura</label>
+          <input type="time" class="form-control" id="configHoraInicio" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label text-muted-th small">Hora de Cierre</label>
+          <input type="time" class="form-control" id="configHoraFin" required>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label text-muted-th small">Duración de cada turno (minutos)</label>
+          <select class="form-select" id="configIntervalo" required>
+            <option value="15">15 minutos</option>
+            <option value="30">30 minutos</option>
+            <option value="45">45 minutos</option>
+            <option value="60">1 hora</option>
+          </select>
+        </div>
+        <div class="col-12 mt-4 text-end">
+          <button type="submit" class="btn-primario" id="btnGuardarConfig">
+            <i class="bi bi-save me-1"></i> Guardar Configuración
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <div class="d-flex justify-content-between align-items-center mt-4 flex-wrap gap-2">
+    <div class="text-muted-th small" id="paginacion-info">Mostrando 0 de 0 turnos</div>
+    <div class="d-flex gap-1" id="paginacion-controles"></div>
+  </div>
+
+</div>
+
+<!-- ── Edit Modal ── -->
+<div class="modal fade" id="modalEditarTurno" tabindex="-1" aria-labelledby="modalEditarTurnoLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalEditarTurnoLabel">
+          <i class="bi bi-pencil-square me-2 text-gold"></i>Editar Turno
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="edit-turno-id" />
+        <div class="mb-3">
+          <label class="form-label">Fecha</label>
+          <input type="date" class="form-control" id="edit-fecha" />
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Hora</label>
+          <input type="time" class="form-control" id="edit-hora" />
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Estado</label>
+          <select class="form-select" id="edit-estado">
+            <option value="pendiente">Pendiente</option>
+            <option value="confirmado">Confirmado</option>
+            <option value="cancelado">Cancelado</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Notas</label>
+          <textarea class="form-control" id="edit-notas" rows="2" placeholder="Observaciones opcionales..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secundario" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn-primario" id="btnGuardarEdicion" onclick="guardarEdicionTurno()">
+          <i class="bi bi-check2 me-1"></i>Guardar cambios
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal Bloqueo ── -->
+<div class="modal fade" id="modalBloqueo" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-calendar-x me-2 text-danger"></i>Bloquear Horario</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label">Fecha</label>
+          <input type="date" class="form-control" id="bloqueo-fecha" required />
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Hora (opcional)</label>
+          <input type="time" class="form-control" id="bloqueo-hora" />
+          <small class="text-muted">Si dejas la hora vacía, se puede interpretar como todo el día (depende de la lógica actual, por ahora bloquea una hora específica).</small>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Motivo</label>
+          <input type="text" class="form-control" id="bloqueo-motivo" placeholder="Ej. Almuerzo, Descanso, etc." value="Descanso" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secundario" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn-danger" onclick="guardarBloqueo()">Bloquear</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal Ingreso Manual ── -->
+<div class="modal fade" id="modalIngreso" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-cash-coin me-2 text-success"></i>Registrar Ingreso Manual</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label">Fecha</label>
+          <input type="date" class="form-control" id="ingreso-fecha" required />
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Hora</label>
+          <input type="time" class="form-control" id="ingreso-hora" required />
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Descripción</label>
+          <input type="text" class="form-control" id="ingreso-descripcion" placeholder="Ej. Corte al paso" required />
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Monto ($)</label>
+          <input type="number" class="form-control" id="ingreso-monto" min="0" step="100" required />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secundario" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn-primario" onclick="guardarIngreso()">Registrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Confirm delete modal ── -->
+<div class="modal fade" id="modalConfirmarAccion" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalAccionTitulo">Confirmar acción</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body text-muted-th" id="modalAccionMensaje"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn-ghost" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn-primario" id="btnConfirmarAccion" onclick="window.confirmarAccionCb && window.confirmarAccionCb()">Confirmar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script type="module" src="../js/panel-turnos.js"></script>
+<script>
+  // Sidebar
+  function openSidebar()  { document.getElementById('sidebar').classList.add('open'); document.getElementById('sidebarOverlay').classList.add('show'); }
+  function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('show'); }
+
+  // Status filter tabs
+  function setStatusFilter(status) {
+    ['todos','pendiente','confirmado','cancelado'].forEach(s => {
+      document.getElementById('tab-' + s)?.classList.remove('active');
+    });
+    document.getElementById('tab-' + status)?.classList.add('active');
+    const select = document.getElementById('filtro-estado');
+    if (select) select.value = status;
+    if (typeof aplicarFiltros === 'function') aplicarFiltros();
+    if (window.turnosManager) window.turnosManager.aplicarFiltros();
+  }
+
+  // Admin info
+  document.addEventListener('DOMContentLoaded', () => {
+    const nombre = localStorage.getItem('adminNombre') || 'Admin';
+    const email  = localStorage.getItem('adminEmail') || '';
+    document.getElementById('adminName').textContent  = nombre;
+    document.getElementById('adminEmail').textContent = email;
+    const avatar = document.getElementById('adminAvatar');
+    if (avatar) avatar.textContent = nombre.charAt(0).toUpperCase();
+
+    // Date
+    const fecha = new Date().toLocaleDateString('es-AR', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+    const fechaEl = document.getElementById('fechaHoy');
+    if (fechaEl) fechaEl.textContent = fecha.charAt(0).toUpperCase() + fecha.slice(1);
+
+    // Redirect if not logged in
+    if (!localStorage.getItem('adminLoggedIn')) {
+      window.location.href = './login.html';
+    }
+  });
+
+  function cerrarSesion() {
+    localStorage.removeItem('adminLoggedIn');
+    localStorage.removeItem('adminEmail');
+    localStorage.removeItem('adminNombre');
+    window.location.href = './login.html';
+  }
+
+  // Hidden select for backward compat with JS
+  const hiddenSelect = document.createElement('select');
+  hiddenSelect.id = 'filtro-estado';
+  hiddenSelect.style.display = 'none';
+  hiddenSelect.innerHTML = `
+    <option value="todos" selected>todos</option>
+    <option value="confirmado">confirmado</option>
+    <option value="pendiente">pendiente</option>
+    <option value="cancelado">cancelado</option>`;
+  document.body.appendChild(hiddenSelect);
+</script>
+</body>
+</html>

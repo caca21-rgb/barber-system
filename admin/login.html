@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Iniciar Sesión — Barber System Admin</title>
+  <meta name="description" content="Panel de administración de Barber System." />
+  <link rel="icon" href="../img/logo-blue.svg" type="image/png" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" />
+  <link href="../css/styles.css" rel="stylesheet" />
+  <style>
+    /* ── Login layout ── */
+    .login-page {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+    @media (max-width: 991px) {
+      .login-page { grid-template-columns: 1fr; }
+      .login-visual { display: none !important; }
+    }
+
+    /* ── Visual side ── */
+    .login-visual {
+      background:
+        linear-gradient(135deg, rgba(10,10,15,0.7) 0%, rgba(12,10,5,0.5) 100%),
+        radial-gradient(ellipse 80% 80% at 30% 50%, rgba(99,102,241,0.15) 0%, transparent 70%);
+      background-color: var(--bg-card);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 4rem 3rem;
+      position: relative;
+      overflow: hidden;
+      border-right: 1px solid rgba(99,102,241,0.1);
+    }
+    .login-visual::before {
+      content: '✂';
+      position: absolute;
+      font-size: 20rem;
+      color: rgba(99,102,241,0.03);
+      bottom: -4rem;
+      right: -4rem;
+      transform: rotate(-30deg);
+      pointer-events: none;
+    }
+    .visual-quote {
+      font-family: 'Inter', sans-serif;
+      font-size: 2rem;
+      font-style: italic;
+      color: var(--cream);
+      line-height: 1.3;
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+    .visual-quote span { color: var(--gold-light); }
+    .visual-features { width: 100%; max-width: 320px; }
+    .visual-feature {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid rgba(99,102,241,0.08);
+    }
+    .visual-feature:last-child { border-bottom: none; }
+    .visual-feature-icon {
+      width: 36px; height: 36px;
+      background: var(--primary-dim);
+      border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--primary);
+      flex-shrink: 0;
+    }
+    .visual-orbs {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(99,102,241,0.12), transparent);
+      animation: orbFloat var(--dur) ease-in-out infinite alternate;
+    }
+    @keyframes orbFloat {
+      from { transform: translateY(0) scale(1); }
+      to   { transform: translateY(-20px) scale(1.05); }
+    }
+
+    /* ── Form side ── */
+    .login-form-side {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 3rem 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .login-form-side::before {
+      content: '';
+      position: absolute;
+      top: -30%;
+      right: -30%;
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(99,102,241,0.05), transparent 70%);
+      pointer-events: none;
+    }
+    .login-box {
+      width: 100%;
+      max-width: 420px;
+      position: relative;
+      z-index: 1;
+    }
+    .login-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 2.5rem;
+      justify-content: center;
+    }
+    .login-logo img {
+      height: 52px;
+      border-radius: 10px;
+      object-fit: contain;
+    }
+    .login-header {
+      margin-bottom: 2.5rem;
+      text-align: center;
+    }
+    .login-header h1 {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+    .login-header p { color: var(--muted-light); font-size: 0.9rem; }
+
+    /* Input group with icon */
+    .input-icon-group { position: relative; }
+    .input-icon-group .input-icon {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      pointer-events: none;
+      transition: var(--transition);
+    }
+    .input-icon-group .form-control {
+      padding-left: 3rem;
+    }
+    .input-icon-group .form-control:focus ~ .input-icon,
+    .input-icon-group .form-control:not(:placeholder-shown) ~ .input-icon {
+      color: var(--primary);
+    }
+    .toggle-password {
+      position: absolute;
+      right: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      padding: 0;
+      line-height: 1;
+      transition: var(--transition);
+      font-size: 1rem;
+    }
+    .toggle-password:hover { color: var(--primary); }
+
+    /* Login button shimmer */
+    .btn-login {
+      width: 100%;
+      padding: 0.9rem;
+      font-size: 1rem;
+      letter-spacing: 0.05em;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-login::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -75%;
+      width: 50%;
+      height: 200%;
+      background: rgba(255,255,255,0.25);
+      transform: skewX(-20deg);
+      animation: shimmer 3s ease infinite;
+    }
+
+    /* Error state */
+    .login-error {
+      background: var(--danger-dim);
+      border: 1px solid var(--danger);
+      border-radius: var(--radius-md);
+      padding: 0.85rem 1rem;
+      color: var(--danger);
+      font-size: 0.875rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      animation: fadeSlideIn 0.3s ease;
+    }
+    .form-group-th { margin-bottom: 1.25rem; }
+
+    /* Loading state */
+    .btn-loading { opacity: 0.85; pointer-events: none; }
+    .spinner-xs {
+      width: 16px; height: 16px;
+      border: 2px solid rgba(0,0,0,0.3);
+      border-top-color: #0a0a0f;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body class="admin-panel">
+
+<div class="login-page">
+
+  <!-- ── Visual side ── -->
+  <div class="login-visual">
+    <div class="visual-orbs">
+      <div class="orb" style="width:300px;height:300px;top:10%;left:10%;--dur:6s;"></div>
+      <div class="orb" style="width:200px;height:200px;bottom:15%;right:5%;--dur:8s;"></div>
+    </div>
+
+    <a href="../index.html" class="d-flex align-items-center gap-2 text-decoration-none mb-5">
+      <img src="../img/logo-blue.svg" alt="Barber System" style="height:48px; border-radius:8px;" />
+      <span class="fw-bold text-gradient" style="font-family: 'Inter', sans-serif; font-size:1.2rem;">Barber System</span>
+    </a>
+
+    <blockquote class="visual-quote mb-4">
+      "El buen barbero<br/>
+      <span>no solo corta,<br/>
+      transforma."</span>
+    </blockquote>
+
+    <div class="visual-features">
+      <div class="visual-feature">
+        <div class="visual-feature-icon"><i class="bi bi-calendar-check"></i></div>
+        <div>
+          <div class="text-cream" style="font-size:0.9rem; font-weight:500;">Gestión de turnos</div>
+          <div class="text-muted-th" style="font-size:0.78rem;">Visualizá y administrá reservas</div>
+        </div>
+      </div>
+      <div class="visual-feature">
+        <div class="visual-feature-icon"><i class="bi bi-graph-up-arrow"></i></div>
+        <div>
+          <div class="text-cream" style="font-size:0.9rem; font-weight:500;">Estadísticas en tiempo real</div>
+          <div class="text-muted-th" style="font-size:0.78rem;">Ingresos, clientes y tendencias</div>
+        </div>
+      </div>
+      <div class="visual-feature">
+        <div class="visual-feature-icon"><i class="bi bi-people"></i></div>
+        <div>
+          <div class="text-cream" style="font-size:0.9rem; font-weight:500;">Gestión de clientes</div>
+          <div class="text-muted-th" style="font-size:0.78rem;">Historial y datos de cada cliente</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Form side ── -->
+  <div class="login-form-side">
+    <div class="login-box">
+
+      <!-- Logo (mobile) -->
+      <div class="login-logo d-lg-none">
+        <img src="../img/logo-blue.svg" alt="Barber System" />
+        <span class="fw-bold text-gradient" style="font-family: 'Inter', sans-serif;">Barber System</span>
+      </div>
+
+      <div class="login-header">
+        <h1>Bienvenido de vuelta <span class="text-gradient">💈</span></h1>
+        <p>Ingresá tus credenciales para acceder al panel de administración</p>
+      </div>
+
+      <!-- Error message (hidden by default) -->
+      <div class="login-error d-none mb-4" id="loginError">
+        <i class="bi bi-exclamation-circle-fill"></i>
+        <span id="loginErrorMsg">Credenciales incorrectas. Intentá de nuevo.</span>
+      </div>
+
+      <form id="loginForm" novalidate>
+
+        <!-- Email -->
+        <div class="form-group-th">
+          <label for="email" class="form-label">Correo electrónico</label>
+          <div class="input-icon-group">
+            <input
+              type="email"
+              class="form-control"
+              id="email"
+              placeholder="admin@thbarber.com"
+              autocomplete="email"
+              required
+            />
+            <i class="bi bi-envelope input-icon"></i>
+          </div>
+          <div class="invalid-feedback">Ingresá un correo válido.</div>
+        </div>
+
+        <!-- Password -->
+        <div class="form-group-th">
+          <label for="password" class="form-label">Contraseña</label>
+          <div class="input-icon-group">
+            <input
+              type="password"
+              class="form-control"
+              id="password"
+              placeholder="••••••••"
+              autocomplete="current-password"
+              required
+            />
+            <i class="bi bi-lock input-icon"></i>
+            <button type="button" class="toggle-password" id="togglePassword" aria-label="Ver contraseña">
+              <i class="bi bi-eye" id="toggleIcon"></i>
+            </button>
+          </div>
+          <div class="invalid-feedback">La contraseña es obligatoria.</div>
+        </div>
+
+        <!-- Remember me -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="rememberMe"
+              style="border-color:rgba(99,102,241,0.4); background-color:var(--bg-surface);" />
+            <label class="form-check-label small text-muted-th" for="rememberMe">Recordarme</label>
+          </div>
+        </div>
+
+        <!-- Submit -->
+        <button type="submit" class="btn-primario btn-login" id="btnLogin">
+          <span class="btn-text">Iniciar Sesión</span>
+        </button>
+
+      </form>
+
+      <div class="text-center mt-4">
+        <a href="../index.html" class="footer-link" style="font-size:0.85rem;">
+          <i class="bi bi-arrow-left me-1"></i> Volver al sitio
+        </a>
+      </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="text-center mt-5">
+      <small class="text-muted-th">© 2026 Barber System. Todos los derechos reservados.</small>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script type="module">
+  import { API_BASE_URL, setAuthToken, getAuthToken } from '../js/config.js';
+
+  const form        = document.getElementById('loginForm');
+  const emailInput  = document.getElementById('email');
+  const passInput   = document.getElementById('password');
+  const toggleBtn   = document.getElementById('togglePassword');
+  const toggleIcon  = document.getElementById('toggleIcon');
+  const loginError  = document.getElementById('loginError');
+  const loginErrMsg = document.getElementById('loginErrorMsg');
+  const btnLogin    = document.getElementById('btnLogin');
+
+  // Toggle password visibility
+  toggleBtn.addEventListener('click', () => {
+    const isPassword = passInput.type === 'password';
+    passInput.type = isPassword ? 'text' : 'password';
+    toggleIcon.className = isPassword ? 'bi bi-eye-slash' : 'bi bi-eye';
+  });
+
+  // Show error
+  function showError(msg) {
+    loginErrMsg.textContent = msg;
+    loginError.classList.remove('d-none');
+    form.classList.add('shake');
+    setTimeout(() => form.classList.remove('shake'), 600);
+  }
+
+  // Set loading
+  function setLoading(loading) {
+    if (loading) {
+      btnLogin.classList.add('btn-loading');
+      btnLogin.innerHTML = '<span class="spinner-xs me-2"></span> Verificando...';
+    } else {
+      btnLogin.classList.remove('btn-loading');
+      btnLogin.innerHTML = '<span class="btn-text">Iniciar Sesión</span>';
+    }
+  }
+
+  // Submit
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    loginError.classList.add('d-none');
+
+    const email    = emailInput.value.trim();
+    const password = passInput.value;
+
+    if (!email || !password) {
+      showError('Por favor completá todos los campos.');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/barberias/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, contrasenia: password }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        
+        // Save token (JWT)
+        const remember = document.getElementById('rememberMe')?.checked;
+        setAuthToken(data.token, remember);
+        
+        localStorage.setItem('adminEmail', email);
+        if (data?.nombreNegocio) localStorage.setItem('adminNombre', data.nombreNegocio);
+        
+        // Needed for panel-turnos.js API calls
+        sessionStorage.setItem('barberia_admin', JSON.stringify({ id: data.id, slug: data.slug }));
+        
+        if (remember) {
+          localStorage.setItem('rememberAdmin', 'true');
+        }
+
+        btnLogin.innerHTML = '<i class="bi bi-check-circle me-2"></i> ¡Acceso concedido!';
+        btnLogin.style.background = 'linear-gradient(135deg,#4caf7d,#7dcfa0)';
+        setTimeout(() => { window.location.href = './panel-turnos.html'; }, 800);
+      } else {
+        showError('Credenciales incorrectas. Verificá tu email y contraseña.');
+        setLoading(false);
+      }
+    } catch (err) {
+      showError('Error de conexión con el servidor. Verificá que el backend esté activo.');
+      setLoading(false);
+    }
+  });
+
+  // Auto-fill remember
+  if (localStorage.getItem('rememberAdmin') === 'true') {
+    const savedEmail = localStorage.getItem('adminEmail');
+    if (savedEmail) {
+      emailInput.value = savedEmail;
+      document.getElementById('rememberMe').checked = true;
+    }
+  }
+
+  // Redirect if already logged in (has valid token)
+  if (getAuthToken()) {
+    window.location.href = './panel-turnos.html';
+  }
+
+  // Clear error on input
+  [emailInput, passInput].forEach(inp => {
+    inp.addEventListener('input', () => loginError.classList.add('d-none'));
+  });
+</script>
+</body>
+</html>
