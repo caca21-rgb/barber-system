@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Clientes — Panel Admin | Barber System</title>
+  <meta name="description" content="Directorio de clientes de tu barbería." />
+  <link rel="icon" href="../img/logo-blue.svg" type="image/png" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" />
+  <link href="../css/styles.css" rel="stylesheet" />
+  <style>
+    body { overflow-x: hidden; background: var(--bg-dark); }
+
+    .sidebar {
+      position: fixed; top: 0; left: 0; width: 260px; height: 100vh;
+      background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(20px);
+      border-right: 1px solid rgba(255, 255, 255, 0.05);
+      display: flex; flex-direction: column; padding: 1.5rem 1rem; z-index: 50;
+      box-shadow: 4px 0 24px rgba(0,0,0,0.2);
+      transition: transform 0.3s ease;
+    }
+    .sidebar.open { transform: translateX(0); }
+    @media (max-width:991px) {
+      .sidebar { transform: translateX(-100%); }
+      .dashboard-main { margin-left: 0 !important; }
+    }
+    .sidebar-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:49; backdrop-filter:blur(8px); }
+    .sidebar-overlay.show { display:block; }
+    .mobile-header {
+      display: none; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255,255,255,0.05); padding: 1rem 1.25rem;
+      position: sticky; top: 0; z-index: 30; align-items: center; gap: 1rem;
+    }
+    @media (max-width:991px) { .mobile-header { display: flex; } }
+    .mobile-menu-btn {
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px; padding: 0.5rem 0.7rem; color: #fff; cursor: pointer;
+    }
+    .dashboard-main { margin-left: 260px; padding: 2rem; min-height: 100vh; }
+
+    .card-premium {
+      background: rgba(30, 41, 59, 0.4) !important;
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08) !important;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    }
+
+    .search-box {
+      background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 50px; padding: 0.6rem 1.1rem 0.6rem 2.8rem;
+      color: #fff; font-size: 0.95rem; width: 320px; max-width: 100%;
+      backdrop-filter: blur(8px); transition: all 0.3s ease;
+    }
+    .search-box:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 15px rgba(99,102,241,0.4); background: rgba(15, 23, 42, 0.9); }
+    .search-box::placeholder { color: rgba(255,255,255,0.4); }
+    .search-wrapper { position: relative; flex: 1; min-width: 160px; }
+    .search-wrapper .bi-search { position: absolute; left: 1.1rem; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,0.5); }
+
+    .table-th { color: var(--muted); font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid rgba(255,255,255,0.08) !important; }
+    .table-th th, .table th { background: transparent !important; color: var(--muted); }
+    .table td { border-color: rgba(255,255,255,0.05); vertical-align: middle; color: var(--cream); font-size: 0.92rem; }
+    .table-hover tbody tr:hover { background: rgba(99,102,241,0.07); }
+
+    .kpi-card { background: rgba(30,41,59,0.5); border: 1px solid rgba(255,255,255,0.07); border-radius: 14px; padding: 1.25rem 1.5rem; }
+    .kpi-val { font-size: 2rem; font-weight: 800; color: #fff; }
+    .kpi-label { font-size: 0.8rem; color: var(--muted); margin-top: 0.2rem; }
+
+    .avatar-cliente { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--gold-light)); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; color: #fff; flex-shrink: 0; }
+    .empty-state { padding: 4rem 2rem; text-align: center; color: var(--muted); }
+    .empty-state i { font-size: 4rem; display: block; margin-bottom: 1.5rem; color: rgba(255,255,255,0.1); }
+  </style>
+</head>
+<body class="admin-panel">
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="document.getElementById('sidebar').classList.remove('open'); this.classList.remove('show')"></div>
+
+<!-- Mobile Header -->
+<div class="mobile-header">
+  <button class="mobile-menu-btn" onclick="document.getElementById('sidebar').classList.add('open'); document.getElementById('sidebarOverlay').classList.add('show')">
+    <i class="bi bi-list fs-5"></i>
+  </button>
+  <img src="../img/logo-blue.svg" alt="Barber System" style="height:36px;border-radius:6px;" />
+  <span class="fw-bold text-gradient ms-1" style="font-family:'Inter',sans-serif;font-size:1rem;">Clientes</span>
+</div>
+
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <a href="../index.html" class="d-flex align-items-center gap-2 text-decoration-none mb-3">
+      <img src="../img/logo-blue.svg" alt="Barber System" style="height:42px;border-radius:8px;" />
+      <div>
+        <div class="text-gradient fw-bold" style="font-family:'Inter',sans-serif;font-size:0.95rem;line-height:1.2;">Barber System</div>
+        <div style="font-size:0.7rem;color:var(--muted);letter-spacing:0.06em;">PANEL ADMIN</div>
+      </div>
+    </a>
+    <hr class="divider-gold m-0" />
+  </div>
+
+  <nav class="sidebar-nav">
+    <div style="font-size:0.68rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.1em;padding:0 0.5rem;margin-bottom:0.75rem;">Principal</div>
+    <a href="./panel-turnos.html" class="sidebar-nav-item"><i class="bi bi-calendar-check"></i> Turnos</a>
+    <a href="./panel-estadisticas.html" class="sidebar-nav-item"><i class="bi bi-graph-up-arrow"></i> Estadísticas</a>
+    <a href="./panel-clientes.html" class="sidebar-nav-item active"><i class="bi bi-people"></i> Clientes</a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="d-flex align-items-center gap-2 mb-3">
+      <div class="avatar-circle" id="adminAvatar">A</div>
+      <div>
+        <div class="text-cream" style="font-size:0.85rem;font-weight:500;" id="adminName">Administrador</div>
+        <div class="text-muted-th" style="font-size:0.72rem;" id="adminEmail">—</div>
+      </div>
+    </div>
+    <button class="sidebar-nav-item w-100 text-start border-0" id="btnLogout" style="color:var(--danger);">
+      <i class="bi bi-box-arrow-left"></i> Cerrar sesión
+    </button>
+  </div>
+</div>
+
+<!-- Main Content -->
+<div class="dashboard-main">
+  <!-- Header -->
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+    <div>
+      <h1 class="text-white mb-1" style="font-size:1.6rem;font-weight:700;">
+        <i class="bi bi-people me-2 text-gradient"></i>Mis Clientes
+      </h1>
+      <p class="text-muted-th mb-0">Directorio completo de clientes que han reservado en tu barbería.</p>
+    </div>
+    <div class="search-wrapper">
+      <i class="bi bi-search"></i>
+      <input type="text" class="search-box" id="buscarCliente" placeholder="Buscar por nombre o teléfono..." oninput="filtrarClientes()" />
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="row g-3 mb-4" id="kpis-clientes">
+    <div class="col-6 col-md-3">
+      <div class="kpi-card">
+        <div class="kpi-val" id="kpi-total">—</div>
+        <div class="kpi-label"><i class="bi bi-people me-1"></i>Total Clientes</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="kpi-card">
+        <div class="kpi-val" id="kpi-recurrentes">—</div>
+        <div class="kpi-label"><i class="bi bi-arrow-repeat me-1"></i>Con WhatsApp</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla -->
+  <div class="card-premium p-0">
+    <div class="d-flex align-items-center justify-content-between px-4 pt-4 pb-3">
+      <h5 class="text-white mb-0 fw-600">Directorio de Clientes</h5>
+      <span class="text-muted-th small" id="subtitulo-tabla">Cargando...</span>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-hover mb-0" id="tablaClientes">
+        <thead class="table-th">
+          <tr>
+            <th class="ps-4">Cliente</th>
+            <th>Teléfono</th>
+            <th>Email</th>
+            <th>Contacto</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-clientes">
+          <tr><td colspan="4" class="text-center py-5"><div class="spinner-border text-primary spinner-border-sm"></div> Cargando clientes...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script type="module">
+  import { ENDPOINTS, getAuthHeaders, clearBarberiaSession } from '../js/config.js';
+
+  let todosLosClientes = [];
+
+  // Cargar info de sesión
+  const session = sessionStorage.getItem('barberia_admin');
+  if (!session) { window.location.href = './login.html'; }
+  const { id: barberiaId, slug } = JSON.parse(session || '{}');
+  const adminEmail = localStorage.getItem('adminEmail') || '—';
+  const adminNombre = localStorage.getItem('adminNombre') || 'Admin';
+
+  document.getElementById('adminName').textContent = adminNombre;
+  document.getElementById('adminEmail').textContent = adminEmail;
+  document.getElementById('adminAvatar').textContent = adminNombre.charAt(0).toUpperCase();
+
+  document.getElementById('btnLogout').addEventListener('click', () => {
+    clearBarberiaSession();
+    localStorage.removeItem('adminEmail');
+    localStorage.removeItem('adminNombre');
+    sessionStorage.removeItem('barberia_admin');
+    window.location.href = './login.html';
+  });
+
+  async function cargarClientes() {
+    try {
+      const res = await fetch(`${ENDPOINTS.clientes}/barberia/${barberiaId}`, {
+        headers: getAuthHeaders()
+      });
+      if (!res.ok) throw new Error('Error al cargar clientes');
+      todosLosClientes = await res.json();
+      renderizarClientes(todosLosClientes);
+    } catch (err) {
+      console.error(err);
+      document.getElementById('tbody-clientes').innerHTML = `
+        <tr><td colspan="4" class="text-center py-5 text-danger">
+          <i class="bi bi-exclamation-triangle me-2"></i>Error al cargar clientes. Verificá tu conexión.
+        </td></tr>`;
+    }
+  }
+
+  function renderizarClientes(clientes) {
+    const tbody = document.getElementById('tbody-clientes');
+    const subtitulo = document.getElementById('subtitulo-tabla');
+    
+    document.getElementById('kpi-total').textContent = clientes.length;
+    const conTelefono = clientes.filter(c => c.telefono).length;
+    document.getElementById('kpi-recurrentes').textContent = conTelefono;
+    subtitulo.textContent = `${clientes.length} clientes encontrados`;
+
+    if (clientes.length === 0) {
+      tbody.innerHTML = `
+        <tr><td colspan="4">
+          <div class="empty-state">
+            <i class="bi bi-people"></i>
+            <p>Aún no tenés clientes registrados.<br>¡Cuando alguien reserve un turno, aparecerá aquí!</p>
+          </div>
+        </td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = clientes.map(c => {
+      const nombre = `${c.nombre || ''} ${c.apellido || ''}`.trim() || 'Sin nombre';
+      const inicial = nombre.charAt(0).toUpperCase();
+      const tel = c.telefono || '';
+      const telClean = tel.replace(/\D/g, '');
+      const waLink = telClean ? `<a href="https://wa.me/${telClean}" target="_blank" class="btn btn-sm" style="background:rgba(37,211,102,0.15);color:#25d366;border:1px solid rgba(37,211,102,0.3);border-radius:8px;" title="WhatsApp"><i class="bi bi-whatsapp"></i></a>` : '<span class="text-muted-th small">—</span>';
+      const emailLink = c.email ? `<a href="mailto:${c.email}" class="text-decoration-none" style="color:var(--primary-light);">${c.email}</a>` : '<span class="text-muted-th">—</span>';
+      
+      return `
+        <tr>
+          <td class="ps-4">
+            <div class="d-flex align-items-center gap-2">
+              <div class="avatar-cliente">${inicial}</div>
+              <div class="fw-500">${nombre}</div>
+            </div>
+          </td>
+          <td>${tel || '<span class="text-muted-th">—</span>'}</td>
+          <td>${emailLink}</td>
+          <td>${waLink}</td>
+        </tr>`;
+    }).join('');
+  }
+
+  window.filtrarClientes = function() {
+    const q = document.getElementById('buscarCliente').value.toLowerCase();
+    const filtrados = todosLosClientes.filter(c => {
+      const nombre = `${c.nombre || ''} ${c.apellido || ''}`.toLowerCase();
+      const tel = (c.telefono || '').toLowerCase();
+      return nombre.includes(q) || tel.includes(q);
+    });
+    renderizarClientes(filtrados);
+  };
+
+  cargarClientes();
+</script>
+</body>
+</html>
