@@ -1,9 +1,9 @@
 // ── Configuración de Servidor ───────────────────────────────────────────────
 // Descomentar la siguiente línea para producción (ej. Railway/Render) y comentar la de localhost
-// export const API_BASE_URL = "https://tu-backend-produccion.up.railway.app";
+export const API_BASE_URL = "https://barber-system-vmxq.onrender.com";
 
 // Para desarrollo local:
-export const API_BASE_URL = "http://localhost:8080";
+// export const API_BASE_URL = "http://localhost:8080";
 
 export const ENDPOINTS = {
   turnos: `${API_BASE_URL}/turnos`,
