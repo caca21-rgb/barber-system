@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SuperAdmin — Barber System</title>
+  <meta name="description" content="Panel de control maestro del SaaS Barber System." />
+  <link rel="icon" href="../img/logo-blue.svg" type="image/png" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0a0f1e;
+      --bg-card: #111827;
+      --border: rgba(255,255,255,0.07);
+      --primary: #6366f1;
+      --gold: #f59e0b;
+      --success: #10b981;
+      --danger: #ef4444;
+      --text: #f1f5f9;
+      --muted: #64748b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    /* Login screen */
+    #loginScreen {
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh;
+      background: radial-gradient(ellipse at 20% 50%, rgba(99,102,241,0.15) 0%, transparent 60%),
+                  radial-gradient(ellipse at 80% 50%, rgba(245,158,11,0.1) 0%, transparent 60%),
+                  var(--bg);
+    }
+    .login-card {
+      background: rgba(17,24,39,0.8); border: 1px solid var(--border);
+      border-radius: 20px; padding: 2.5rem; width: 100%; max-width: 420px;
+      backdrop-filter: blur(20px); box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+    }
+    .login-card .logo { text-align: center; margin-bottom: 2rem; }
+    .login-card .logo img { height: 52px; border-radius: 10px; }
+    .login-card h1 { font-size: 1.3rem; font-weight: 700; text-align: center; color: #fff; margin-bottom: 0.3rem; }
+    .login-card p { text-align: center; color: var(--muted); font-size: 0.85rem; margin-bottom: 2rem; }
+    .form-control-dark {
+      background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+      border-radius: 10px; color: #fff; padding: 0.75rem 1rem;
+      transition: all 0.2s;
+    }
+    .form-control-dark:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(99,102,241,0.2); background: rgba(255,255,255,0.08); color: #fff; }
+    .form-control-dark::placeholder { color: var(--muted); }
+    .btn-primary-custom {
+      background: linear-gradient(135deg, var(--primary), #8b5cf6);
+      border: none; border-radius: 10px; padding: 0.8rem 1.5rem;
+      font-weight: 600; color: #fff; width: 100%; cursor: pointer;
+      transition: all 0.2s; font-size: 1rem;
+    }
+    .btn-primary-custom:hover { transform: translateY(-1px); box-shadow: 0 8px 25px rgba(99,102,241,0.4); }
+
+    /* Dashboard */
+    #dashboard { display: none; }
+    .topbar {
+      background: rgba(17,24,39,0.9); backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 2rem; display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 40;
+    }
+    .topbar-brand { display: flex; align-items: center; gap: 0.75rem; }
+    .topbar-brand img { height: 36px; border-radius: 8px; }
+    .topbar-title { font-weight: 800; font-size: 1.1rem; color: #fff; }
+    .topbar-badge { background: rgba(245,158,11,0.2); color: var(--gold); border: 1px solid rgba(245,158,11,0.3); border-radius: 20px; padding: 0.2rem 0.8rem; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }
+    .btn-logout { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: var(--danger); border-radius: 8px; padding: 0.4rem 1rem; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; }
+    .btn-logout:hover { background: rgba(239,68,68,0.2); }
+
+    .main-content { padding: 2rem; max-width: 1400px; margin: 0 auto; }
+
+    /* KPI Cards */
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.25rem; margin-bottom: 2rem; }
+    .kpi-card {
+      background: rgba(17,24,39,0.6); border: 1px solid var(--border);
+      border-radius: 16px; padding: 1.5rem;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .kpi-card:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,0.3); }
+    .kpi-icon { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-bottom: 1rem; }
+    .kpi-val { font-size: 2.2rem; font-weight: 800; color: #fff; line-height: 1; }
+    .kpi-label { font-size: 0.8rem; color: var(--muted); margin-top: 0.3rem; }
+
+    /* Table */
+    .table-card { background: rgba(17,24,39,0.6); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+    .table-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+    .table-header h2 { font-size: 1rem; font-weight: 700; color: #fff; margin: 0; }
+    .search-input {
+      background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+      border-radius: 8px; color: #fff; padding: 0.5rem 1rem;
+      font-size: 0.85rem; width: 220px;
+    }
+    .search-input:focus { border-color: var(--primary); outline: none; }
+    .search-input::placeholder { color: var(--muted); }
+
+    table { width: 100%; border-collapse: collapse; }
+    th { color: var(--muted); font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 0.85rem 1.25rem; border-bottom: 1px solid var(--border); text-align: left; }
+    td { padding: 1rem 1.25rem; border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.88rem; vertical-align: middle; }
+    tr:hover td { background: rgba(99,102,241,0.05); }
+    tr:last-child td { border-bottom: none; }
+
+    .badge-activa { background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3); border-radius: 20px; padding: 0.2rem 0.7rem; font-size: 0.72rem; font-weight: 600; }
+    .badge-inactiva { background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); border-radius: 20px; padding: 0.2rem 0.7rem; font-size: 0.72rem; font-weight: 600; }
+    .badge-vencida { background: rgba(245,158,11,0.15); color: var(--gold); border: 1px solid rgba(245,158,11,0.3); border-radius: 20px; padding: 0.2rem 0.7rem; font-size: 0.72rem; font-weight: 600; }
+    .badge-plan { background: rgba(99,102,241,0.15); color: #818cf8; border: 1px solid rgba(99,102,241,0.3); border-radius: 20px; padding: 0.2rem 0.7rem; font-size: 0.72rem; font-weight: 600; }
+
+    .action-btn {
+      border: 1px solid; border-radius: 8px; padding: 0.35rem 0.75rem;
+      font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all 0.2s;
+      background: transparent;
+    }
+    .btn-block { color: var(--danger); border-color: rgba(239,68,68,0.4); }
+    .btn-block:hover { background: rgba(239,68,68,0.15); }
+    .btn-unblock { color: var(--success); border-color: rgba(16,185,129,0.4); }
+    .btn-unblock:hover { background: rgba(16,185,129,0.15); }
+    .btn-edit { color: var(--primary); border-color: rgba(99,102,241,0.4); }
+    .btn-edit:hover { background: rgba(99,102,241,0.15); }
+
+    /* Modal */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+    .modal-overlay.open { display: flex; }
+    .modal-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 2rem; width: 100%; max-width: 500px; box-shadow: 0 25px 60px rgba(0,0,0,0.5); }
+    .modal-box h3 { font-size: 1.1rem; font-weight: 700; color: #fff; margin-bottom: 1.5rem; }
+    label { font-size: 0.82rem; color: var(--muted); display: block; margin-bottom: 0.3rem; margin-top: 1rem; }
+    .toast-notif { position: fixed; bottom: 2rem; right: 2rem; background: rgba(17,24,39,0.95); border: 1px solid var(--border); border-radius: 12px; padding: 1rem 1.5rem; color: #fff; font-size: 0.9rem; z-index: 200; transform: translateY(100px); opacity: 0; transition: all 0.3s ease; box-shadow: 0 8px 30px rgba(0,0,0,0.4); }
+    .toast-notif.show { transform: translateY(0); opacity: 1; }
+    .toast-notif.success { border-color: rgba(16,185,129,0.4); }
+    .toast-notif.error { border-color: rgba(239,68,68,0.4); }
+
+    .empty-state { text-align: center; padding: 4rem 2rem; color: var(--muted); }
+    .empty-state i { font-size: 3rem; display: block; margin-bottom: 1rem; opacity: 0.3; }
+
+    @media (max-width: 640px) {
+      .main-content { padding: 1rem; }
+      .topbar { padding: 0.75rem 1rem; }
+      .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Login Screen ── -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="logo">
+      <img src="../img/logo-blue.svg" alt="Barber System" />
+    </div>
+    <h1>Panel Maestro</h1>
+    <p>Acceso exclusivo para el administrador del sistema</p>
+    <div id="loginError" style="display:none; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:10px; padding:0.75rem 1rem; color:#f87171; font-size:0.85rem; margin-bottom:1rem;"></div>
+    <div style="display:flex; flex-direction:column; gap:1rem;">
+      <input type="email" id="inputEmail" class="form-control-dark" placeholder="Email del superadmin" />
+      <input type="password" id="inputPassword" class="form-control-dark" placeholder="Contraseña" />
+      <button class="btn-primary-custom" onclick="doLogin()">
+        <i class="bi bi-shield-lock me-2"></i>Ingresar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Dashboard ── -->
+<div id="dashboard">
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="topbar-brand">
+      <img src="../img/logo-blue.svg" alt="Logo" />
+      <div>
+        <div class="topbar-title">Barber System</div>
+        <div style="font-size:0.7rem; color:var(--muted);">PANEL SUPERADMIN</div>
+      </div>
+      <span class="topbar-badge ms-2">🛡️ Maestro</span>
+    </div>
+    <button class="btn-logout" onclick="logout()"><i class="bi bi-box-arrow-right me-1"></i>Salir</button>
+  </div>
+
+  <div class="main-content">
+    <!-- KPIs -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-icon" style="background:rgba(99,102,241,0.2);color:#818cf8;"><i class="bi bi-scissors"></i></div>
+        <div class="kpi-val" id="kpi-total">—</div>
+        <div class="kpi-label">Barberías Registradas</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon" style="background:rgba(16,185,129,0.2);color:#10b981;"><i class="bi bi-check-circle"></i></div>
+        <div class="kpi-val" id="kpi-activas">—</div>
+        <div class="kpi-label">Cuentas Activas</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon" style="background:rgba(239,68,68,0.2);color:#f87171;"><i class="bi bi-slash-circle"></i></div>
+        <div class="kpi-val" id="kpi-inactivas">—</div>
+        <div class="kpi-label">Cuentas Bloqueadas</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon" style="background:rgba(245,158,11,0.2);color:#fbbf24;"><i class="bi bi-clock-history"></i></div>
+        <div class="kpi-val" id="kpi-vencidas">—</div>
+        <div class="kpi-label">Suscripciones Vencidas</div>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-card">
+      <div class="table-header">
+        <h2><i class="bi bi-table me-2 text-primary"></i>Todas las Barberías</h2>
+        <div style="display:flex; gap:0.75rem; align-items:center; flex-wrap:wrap;">
+          <input type="text" id="searchInput" class="search-input" placeholder="🔍 Buscar por nombre..." oninput="filtrarTabla()" />
+          <button class="action-btn btn-unblock" onclick="abrirModalCrear()" title="Nueva Barbería"><i class="bi bi-plus-lg"></i> Nueva Barbería</button>
+          <button class="action-btn btn-edit" onclick="cargarBarberias()" title="Refrescar"><i class="bi bi-arrow-clockwise"></i> Refrescar</button>
+        </div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table id="tablaBarberias">
+          <thead>
+            <tr>
+              <th>Barbería</th>
+              <th>Email</th>
+              <th>Plan</th>
+              <th>Vencimiento</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyBarberias">
+            <tr><td colspan="6" class="text-center py-4" style="color:var(--muted);">Cargando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Edit Modal ── -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal-box">
+    <h3><i class="bi bi-pencil-square me-2"></i>Editar Barbería</h3>
+    <input type="hidden" id="editId" />
+    <label>Nombre del Negocio</label>
+    <input type="text" id="editNombre" class="form-control-dark w-100" />
+    <label>Plan de Suscripción</label>
+    <select id="editPlan" class="form-control-dark w-100">
+      <option value="TRIAL">TRIAL</option>
+      <option value="MENSUAL">MENSUAL</option>
+      <option value="TRIMESTRAL">TRIMESTRAL</option>
+      <option value="ANUAL">ANUAL</option>
+    </select>
+    <label>Fecha de Vencimiento</label>
+    <input type="date" id="editVencimiento" class="form-control-dark w-100" />
+    <label>Nueva Contraseña (dejar vacío para no cambiar)</label>
+    <input type="text" id="editContrasenia" class="form-control-dark w-100" placeholder="Nueva contraseña..." />
+    <div style="display:flex; gap:1rem; margin-top:1.5rem;">
+      <button class="action-btn btn-edit" style="flex:1; padding:0.65rem;" onclick="guardarEdicion()">
+        <i class="bi bi-check-lg me-1"></i>Guardar
+      </button>
+      <button class="action-btn btn-block" style="flex:1; padding:0.65rem;" onclick="cerrarModal()">
+        <i class="bi bi-x me-1"></i>Cancelar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Create Modal ── -->
+<div class="modal-overlay" id="createModal">
+  <div class="modal-box" style="max-width: 480px; padding: 2rem;">
+    <div style="display:flex; align-items:center; gap:1rem; margin-bottom:1.5rem;">
+      <div style="width:50px; height:50px; background:rgba(99,102,241,0.15); border-radius:12px; display:flex; align-items:center; justify-content:center; color:var(--primary); font-size:1.5rem;">
+        <i class="bi bi-shop-window"></i>
+      </div>
+      <div>
+        <h3 style="margin:0; font-size:1.4rem;">Alta de Barbería</h3>
+        <p style="margin:0; color:var(--muted); font-size:0.85rem;">Crea una nueva cuenta de cliente SaaS</p>
+      </div>
+    </div>
+    
+    <div style="margin-bottom:1.2rem;">
+      <label style="font-size:0.85rem; color:var(--muted-light); margin-bottom:0.5rem; display:block;">Nombre del Negocio <span class="text-danger">*</span></label>
+      <div style="position:relative;">
+        <i class="bi bi-scissors" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--muted);"></i>
+        <input type="text" id="createNombre" class="form-control-dark w-100" placeholder="Ej: BarberShop Premium" style="padding-left:2.5rem;" />
+      </div>
+    </div>
+    
+    <div style="margin-bottom:1.2rem;">
+      <label style="font-size:0.85rem; color:var(--muted-light); margin-bottom:0.5rem; display:block;">Correo Electrónico (Para Login) <span class="text-danger">*</span></label>
+      <div style="position:relative;">
+        <i class="bi bi-envelope" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--muted);"></i>
+        <input type="email" id="createEmail" class="form-control-dark w-100" placeholder="barbero@email.com" style="padding-left:2.5rem;" />
+      </div>
+    </div>
+    
+    <div style="margin-bottom:1.5rem;">
+      <label style="font-size:0.85rem; color:var(--muted-light); margin-bottom:0.5rem; display:block;">Contraseña Temporal <span class="text-danger">*</span></label>
+      <div style="display:flex; gap:0.5rem;">
+        <div style="position:relative; flex:1;">
+          <i class="bi bi-key" style="position:absolute; left:1rem; top:50%; transform:translateY(-50%); color:var(--muted);"></i>
+          <input type="text" id="createContrasenia" class="form-control-dark w-100" placeholder="Contraseña segura..." style="padding-left:2.5rem;" />
+        </div>
+        <button class="action-btn btn-edit" style="padding:0 1rem; border-radius:8px;" onclick="generarPassword()" title="Generar Contraseña Segura">
+          <i class="bi bi-magic"></i>
+        </button>
+      </div>
+      <small style="display:block; margin-top:0.5rem; color:var(--muted); font-size:0.75rem;"><i class="bi bi-info-circle me-1"></i>Guárdala bien. El barbero la necesitará para entrar a su panel.</small>
+    </div>
+    
+    <div style="display:flex; gap:1rem; margin-top:2rem;">
+      <button class="action-btn btn-block" style="flex:1; padding:0.8rem; font-size:0.95rem;" onclick="cerrarModalCrear()">
+        Cancelar
+      </button>
+      <button class="action-btn btn-unblock" style="flex:1; padding:0.8rem; font-size:0.95rem; background:linear-gradient(135deg, var(--primary), #818cf8); border:none; box-shadow:0 4px 15px rgba(99,102,241,0.4);" onclick="crearBarberia()">
+        <i class="bi bi-rocket-takeoff me-1"></i> Crear y Activar
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-notif" id="toastNotif"></div>
+
+<script>
+  const API = 'http://localhost:8080/barberias';
+  let saEmail = '', saPass = '';
+  let todasLasBarberias = [];
+
+  // ── Auth ──────────────────────────────────────────────────
+  async function doLogin() {
+    const email = document.getElementById('inputEmail').value.trim();
+    const pass = document.getElementById('inputPassword').value.trim();
+    const errEl = document.getElementById('loginError');
+    if (!email || !pass) { errEl.textContent = 'Completá todos los campos.'; errEl.style.display = 'block'; return; }
+    
+    try {
+      const res = await fetch(`${API}/superadmin/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password: pass })
+      });
+      if (!res.ok) { errEl.textContent = 'Credenciales incorrectas. Acceso denegado.'; errEl.style.display = 'block'; return; }
+      
+      saEmail = email;
+      saPass = pass;
+      sessionStorage.setItem('sa_session', JSON.stringify({ email, pass }));
+      errEl.style.display = 'none';
+      showDashboard();
+    } catch (e) {
+      errEl.textContent = 'Error de conexión con el servidor.';
+      errEl.style.display = 'block';
+    }
+  }
+
+  function logout() {
+    sessionStorage.removeItem('sa_session');
+    saEmail = ''; saPass = '';
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('dashboard').style.display = 'none';
+  }
+
+  function showDashboard() {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+    cargarBarberias();
+  }
+
+  // Verificar sesión existente
+  const storedSession = sessionStorage.getItem('sa_session');
+  if (storedSession) {
+    const s = JSON.parse(storedSession);
+    saEmail = s.email; saPass = s.pass;
+    showDashboard();
+  }
+
+  // ── Cargar datos ──────────────────────────────────────────
+  async function cargarBarberias() {
+    document.getElementById('tbodyBarberias').innerHTML = '<tr><td colspan="6" class="text-center py-4" style="color:var(--muted);"><i class="bi bi-arrow-repeat me-2"></i>Cargando...</td></tr>';
+    try {
+      const res = await fetch(`${API}/superadmin/all`, {
+        headers: { 'X-SuperAdmin-Email': saEmail, 'X-SuperAdmin-Password': saPass }
+      });
+      if (!res.ok) throw new Error();
+      todasLasBarberias = await res.json();
+      renderTabla(todasLasBarberias);
+      actualizarKPIs(todasLasBarberias);
+    } catch (e) {
+      document.getElementById('tbodyBarberias').innerHTML = '<tr><td colspan="6" class="text-center py-4" style="color:var(--danger);"><i class="bi bi-exclamation-triangle me-2"></i>Error al cargar datos.</td></tr>';
+    }
+  }
+
+  function actualizarKPIs(lista) {
+    const hoy = new Date(); hoy.setHours(0,0,0,0);
+    const vencidas = lista.filter(b => b.planVencimiento && new Date(b.planVencimiento) < hoy).length;
+    document.getElementById('kpi-total').textContent = lista.length;
+    document.getElementById('kpi-activas').textContent = lista.filter(b => b.activa).length;
+    document.getElementById('kpi-inactivas').textContent = lista.filter(b => !b.activa).length;
+    document.getElementById('kpi-vencidas').textContent = vencidas;
+  }
+
+  function renderTabla(lista) {
+    const tbody = document.getElementById('tbodyBarberias');
+    if (lista.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><i class="bi bi-scissors"></i><p>No hay barberías registradas aún.</p></div></td></tr>';
+      return;
+    }
+    const hoy = new Date(); hoy.setHours(0,0,0,0);
+    tbody.innerHTML = lista.map(b => {
+      const venc = b.planVencimiento ? new Date(b.planVencimiento) : null;
+      const estaVencida = venc && venc < hoy;
+      let estadoBadge = b.activa
+        ? (estaVencida ? '<span class="badge-vencida">⚠️ Vencida</span>' : '<span class="badge-activa">✅ Activa</span>')
+        : '<span class="badge-inactiva">🚫 Bloqueada</span>';
+      const vencTexto = venc ? venc.toLocaleDateString('es-AR') : '<span style="color:var(--muted);">Sin fecha</span>';
+      const planBadge = `<span class="badge-plan">${b.plan || 'TRIAL'}</span>`;
+      const toggleBtn = b.activa
+        ? `<button class="action-btn btn-block" onclick="toggleActiva(${b.id}, false)"><i class="bi bi-slash-circle me-1"></i>Bloquear</button>`
+        : `<button class="action-btn btn-unblock" onclick="toggleActiva(${b.id}, true)"><i class="bi bi-check-circle me-1"></i>Activar</button>`;
+      return `
+        <tr>
+          <td>
+            <div style="font-weight:600;color:#fff;">${b.nombreNegocio}</div>
+            <div style="font-size:0.75rem;color:var(--muted);">/${b.slug}</div>
+          </td>
+          <td style="color:var(--muted);font-size:0.85rem;">${b.email}</td>
+          <td>${planBadge}</td>
+          <td style="font-size:0.85rem;">${vencTexto}</td>
+          <td>${estadoBadge}</td>
+          <td>
+            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+              ${toggleBtn}
+              <button class="action-btn btn-edit" onclick="abrirModal(${b.id})"><i class="bi bi-pencil me-1"></i>Editar</button>
+              <button class="action-btn" style="background:var(--bg-card);border:1px solid rgba(0,212,255,0.3);color:var(--accent);" onclick="copiarLinkReserva('${b.slug}')"><i class="bi bi-link-45deg me-1"></i>Link</button>
+            </div>
+          </td>
+        </tr>`;
+    }).join('');
+  }
+
+  function filtrarTabla() {
+    const q = document.getElementById('searchInput').value.toLowerCase();
+    const filtrados = todasLasBarberias.filter(b =>
+      b.nombreNegocio.toLowerCase().includes(q) ||
+      b.email.toLowerCase().includes(q) ||
+      (b.slug || '').toLowerCase().includes(q)
+    );
+    renderTabla(filtrados);
+  }
+
+  function copiarLinkReserva(slug) {
+    const url = window.location.origin + '/index.html?slug=' + slug;
+    navigator.clipboard.writeText(url).then(() => {
+      toast('Enlace copiado al portapapeles: ' + url, 'success');
+    }).catch(err => {
+      console.error('Error al copiar: ', err);
+      toast('No se pudo copiar el enlace.', 'error');
+    });
+  }
+
+  // ── Acciones ──────────────────────────────────────────────
+  async function toggleActiva(id, activar) {
+    const accion = activar ? 'activar' : 'desactivar';
+    const confirmMsg = activar ? '¿Activar esta barbería?' : '⚠️ ¿Bloquear el acceso a esta barbería?';
+    if (!confirm(confirmMsg)) return;
+    try {
+      const res = await fetch(`${API}/${id}/${accion}`, {
+        method: 'PATCH',
+        headers: { 'X-SuperAdmin-Email': saEmail, 'X-SuperAdmin-Password': saPass }
+      });
+      if (!res.ok) throw new Error();
+      toast(`Cuenta ${activar ? 'activada' : 'bloqueada'} correctamente.`, activar ? 'success' : 'error');
+      await cargarBarberias();
+    } catch (e) {
+      toast('Error al cambiar el estado.', 'error');
+    }
+  }
+
+  function abrirModal(id) {
+    const b = todasLasBarberias.find(x => x.id === id);
+    if (!b) return;
+    document.getElementById('editId').value = id;
+    document.getElementById('editNombre').value = b.nombreNegocio || '';
+    document.getElementById('editPlan').value = b.plan || 'TRIAL';
+    document.getElementById('editVencimiento').value = b.planVencimiento || '';
+    document.getElementById('editContrasenia').value = '';
+    document.getElementById('editModal').classList.add('open');
+  }
+
+  function cerrarModal() {
+    document.getElementById('editModal').classList.remove('open');
+  }
+
+  async function guardarEdicion() {
+    const id = document.getElementById('editId').value;
+    const payload = {
+      nombreNegocio: document.getElementById('editNombre').value,
+      plan: document.getElementById('editPlan').value,
+      planVencimiento: document.getElementById('editVencimiento').value || null
+    };
+    const nuevaPass = document.getElementById('editContrasenia').value;
+    if (nuevaPass) payload.contrasenia = nuevaPass;
+
+    try {
+      const res = await fetch(`${API}/superadmin/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-SuperAdmin-Email': saEmail,
+          'X-SuperAdmin-Password': saPass
+        },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error();
+      cerrarModal();
+      toast('Barbería actualizada correctamente. ✅', 'success');
+      await cargarBarberias();
+    } catch (e) {
+      toast('Error al guardar los cambios.', 'error');
+    }
+  }
+
+  function abrirModalCrear() {
+    document.getElementById('createNombre').value = '';
+    document.getElementById('createEmail').value = '';
+    document.getElementById('createContrasenia').value = '';
+    document.getElementById('createModal').classList.add('open');
+  }
+
+  function cerrarModalCrear() {
+    document.getElementById('createModal').classList.remove('open');
+  }
+
+  function generarPassword() {
+    const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
+    let pwd = "";
+    for(let i=0; i<10; i++) {
+      pwd += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    document.getElementById('createContrasenia').value = pwd;
+    // Opcional: enfocar input para que se vea
+    document.getElementById('createContrasenia').focus();
+  }
+
+  async function crearBarberia() {
+    const payload = {
+      nombreNegocio: document.getElementById('createNombre').value.trim(),
+      email: document.getElementById('createEmail').value.trim(),
+      contrasenia: document.getElementById('createContrasenia').value.trim()
+    };
+    if (!payload.nombreNegocio || !payload.email || !payload.contrasenia) {
+      toast('Completa todos los campos obligatorios', 'error');
+      return;
+    }
+
+    try {
+      // Usamos el endpoint publico de registro (o uno protegido si existiera)
+      const res = await fetch(`${API}/registro`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) {
+        const txt = await res.text();
+        throw new Error(txt);
+      }
+      cerrarModalCrear();
+      toast('Barbería creada exitosamente. ✅', 'success');
+      await cargarBarberias();
+    } catch (e) {
+      toast('Error al crear barbería: ' + e.message, 'error');
+    }
+  }
+  // Cerrar modal al hacer clic fuera (ELIMINADO para evitar cierres accidentales al copiar texto)
+  // Enter en el login
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && document.getElementById('loginScreen').style.display !== 'none') doLogin();
+  });
+
+  // ── Toast ──────────────────────────────────────────────────
+  function toast(msg, type = 'success') {
+    const el = document.getElementById('toastNotif');
+    el.textContent = msg;
+    el.className = `toast-notif ${type} show`;
+    setTimeout(() => el.classList.remove('show'), 3500);
+  }
+</script>
+</body>
+</html>

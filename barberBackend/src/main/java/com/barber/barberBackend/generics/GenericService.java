@@ -21,8 +21,8 @@ public abstract class GenericService<T, ID extends Serializable, R extends Gener
     @Autowired
     private R repository;
 
-    public void save(T entity) {
-        repository.save(entity);
+    public T save(T entity) {
+        return repository.save(entity);
     }
     public List<T> saveAll(List<T> entities) {
         return repository.saveAll(entities);

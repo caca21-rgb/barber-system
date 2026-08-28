@@ -3,6 +3,7 @@ package com.barber.barberBackend.service;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.barber.barberBackend.generics.GenericService;
@@ -16,10 +17,18 @@ public class BarberiaService extends GenericService<Barberia, Long, IBarberiaRep
     @Autowired
     private IBarberiaRepository repository;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     @Override
     public Barberia login(String email, String contrasenia) {
-        Barberia barberia = repository.findByEmailAndContrasenia(email, contrasenia)
+        Barberia barberia = repository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Credenciales inválidas"));
+        
+        if (!passwordEncoder.matches(contrasenia, barberia.getContrasenia())) {
+            throw new RuntimeException("Credenciales inválidas");
+        }
+        
         if (!barberia.isActiva()) {
             throw new RuntimeException("CUENTA_DESACTIVADA");
         }

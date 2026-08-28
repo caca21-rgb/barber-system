@@ -10,7 +10,7 @@ import com.barber.barberBackend.model.Barberia;
 @Repository
 public interface IBarberiaRepository extends GenericRepository<Barberia, Long> {
     Optional<Barberia> findBySlug(String slug);
-    Optional<Barberia> findByEmailAndContrasenia(String email, String contrasenia);
+    Optional<Barberia> findByEmail(String email);
     boolean existsBySlug(String slug);
     boolean existsByEmail(String email);
 }

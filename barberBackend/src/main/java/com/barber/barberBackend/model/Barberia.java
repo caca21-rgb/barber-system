@@ -2,21 +2,12 @@ package com.barber.barberBackend.model;
 
 import java.time.LocalDate;
 
-import jakarta.persistence.Basic;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
 @Entity
 public class Barberia {
 
@@ -24,40 +15,79 @@ public class Barberia {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /** Nombre visible del negocio (ej: "Barber Angel") */
-    @Basic(optional = false)
     private String nombreNegocio;
 
-    /** Identificador único en la URL (ej: "barber-angel") */
     @Column(unique = true, nullable = false)
     private String slug;
 
-    /** Email de login del dueño de la barbería */
     @Column(unique = true, nullable = false)
     private String email;
 
-    /** Contraseña del dueño (plain text por ahora, igual que el sistema actual) */
-    @Basic(optional = false)
     private String contrasenia;
 
-    /** true = activa y puede acceder, false = suspendida */
     private boolean activa = true;
 
-    /** Fecha límite del plan (null = sin vencimiento configurado) */
     private LocalDate planVencimiento;
 
-    /** Teléfono de contacto opcional */
     private String telefono;
 
-    /** Horario de apertura, ej: "09:00" */
-    @Column(columnDefinition = "varchar(10) default '09:00'")
+    @Column(length = 10)
     private String horaInicio = "09:00";
 
-    /** Horario de cierre, ej: "18:00" */
-    @Column(columnDefinition = "varchar(10) default '18:00'")
+    @Column(length = 10)
     private String horaFin = "18:00";
 
-    /** Duración en minutos de cada franja, ej: 30 */
-    @Column(columnDefinition = "int default 30")
     private int intervaloMinutos = 30;
+
+    private String logoUrl;
+
+    private String bannerUrl;
+
+    @Column(length = 20)
+    private String plan = "TRIAL";
+
+    public Barberia() {}
+
+    // Getters & Setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public String getNombreNegocio() { return nombreNegocio; }
+    public void setNombreNegocio(String nombreNegocio) { this.nombreNegocio = nombreNegocio; }
+
+    public String getSlug() { return slug; }
+    public void setSlug(String slug) { this.slug = slug; }
+
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+
+    public String getContrasenia() { return contrasenia; }
+    public void setContrasenia(String contrasenia) { this.contrasenia = contrasenia; }
+
+    public boolean isActiva() { return activa; }
+    public void setActiva(boolean activa) { this.activa = activa; }
+
+    public LocalDate getPlanVencimiento() { return planVencimiento; }
+    public void setPlanVencimiento(LocalDate planVencimiento) { this.planVencimiento = planVencimiento; }
+
+    public String getTelefono() { return telefono; }
+    public void setTelefono(String telefono) { this.telefono = telefono; }
+
+    public String getHoraInicio() { return horaInicio; }
+    public void setHoraInicio(String horaInicio) { this.horaInicio = horaInicio; }
+
+    public String getHoraFin() { return horaFin; }
+    public void setHoraFin(String horaFin) { this.horaFin = horaFin; }
+
+    public int getIntervaloMinutos() { return intervaloMinutos; }
+    public void setIntervaloMinutos(int intervaloMinutos) { this.intervaloMinutos = intervaloMinutos; }
+
+    public String getLogoUrl() { return logoUrl; }
+    public void setLogoUrl(String logoUrl) { this.logoUrl = logoUrl; }
+
+    public String getBannerUrl() { return bannerUrl; }
+    public void setBannerUrl(String bannerUrl) { this.bannerUrl = bannerUrl; }
+
+    public String getPlan() { return plan; }
+    public void setPlan(String plan) { this.plan = plan; }
 }

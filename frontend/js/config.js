@@ -1,3 +1,8 @@
+// ── Configuración de Servidor ───────────────────────────────────────────────
+// Descomentar la siguiente línea para producción (ej. Railway/Render) y comentar la de localhost
+// export const API_BASE_URL = "https://tu-backend-produccion.up.railway.app";
+
+// Para desarrollo local:
 export const API_BASE_URL = "http://localhost:8080";
 
 export const ENDPOINTS = {

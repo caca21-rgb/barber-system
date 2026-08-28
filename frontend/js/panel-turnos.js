@@ -134,6 +134,14 @@ class ApiService {
         });
     }
 
+    // PATCH - Actualizar estado del turno
+    async updateEstadoTurno(id, estado) {
+        return this.makeRequest(`${ENDPOINTS.turnos}/${id}/estado`, {
+            method: 'PATCH',
+            body: JSON.stringify({ estado })
+        });
+    }
+
     // DELETE - Eliminar turno
     async deleteTurno(id) {
         return this.makeRequest(`${ENDPOINTS.turnos}/${id}`, {
@@ -162,7 +170,7 @@ class TurnoModel {
             telefono: apiData.cliente?.telefono || '',
             email: apiData.cliente?.email || '',
             servicio: apiData.servicio?.tipo || 'Reserva General',
-            estado: 'confirmado',
+            estado: (apiData.estado || 'PENDIENTE').toUpperCase(),
             precio: apiData.servicio?.precio || 0
         };
     }
@@ -330,6 +338,7 @@ class TurnosManager {
         window.editarTurno = (id) => this.editarTurno(id);
         window.guardarEdicionTurno = () => this.guardarEdicionTurno();
         window.cancelarTurno = (id) => this.cancelarTurno(id);
+        window.cambiarEstadoTurno = (id, estado) => this.cambiarEstadoTurno(id, estado);
         window.navegarMes = (direccion) => this.navegarMes(direccion);
         window.seleccionarDia = (fecha) => this.seleccionarDia(fecha);
         window.guardarConfiguracion = (e) => this.guardarConfiguracion(e);
@@ -561,14 +570,19 @@ class TurnosManager {
             const row = tbody.insertRow();
             const fechaFormateada = turno.fecha.split("T")[0].split("-").reverse().join("/");
             const estadoBadge = this.getEstadoBadge(turno.estado);
+            const isPendiente = turno.estado === 'PENDIENTE';
             
             // Generar enlace de WhatsApp si hay teléfono
             let whatsappBtn = '';
             if (turno.telefono) {
                 const telClean = turno.telefono.replace(/\D/g, '');
                 const msg = encodeURIComponent(`Hola ${turno.cliente}, te escribimos de Barber System para recordarte tu turno el día ${fechaFormateada} a las ${turno.hora}.`);
-                whatsappBtn = `<a href="https://wa.me/${telClean}?text=${msg}" target="_blank" class="btn btn-outline-success btn-sm" title="Avisar por WhatsApp"><i class="bi bi-whatsapp"></i></a>`;
+                whatsappBtn = `<a href="https://wa.me/${telClean}?text=${msg}" target="_blank" class="table-action-btn" style="background:rgba(37,211,102,0.15);color:#25d366;border-color:rgba(37,211,102,0.3)" title="Avisar por WhatsApp"><i class="bi bi-whatsapp"></i></a>`;
             }
+            
+            // Botones rápidos de estado (solo si está pendiente)
+            const btnCompletar = isPendiente ? `<button class="table-action-btn btn-confirm" onclick="cambiarEstadoTurno(${turno.id}, 'COMPLETADO')" title="Marcar como completado"><i class="bi bi-check-lg"></i></button>` : '';
+            const btnNoAsistio = isPendiente ? `<button class="table-action-btn btn-cancel-a" onclick="cambiarEstadoTurno(${turno.id}, 'NO_ASISTIO')" title="No asistió"><i class="bi bi-person-x"></i></button>` : '';
             
             row.innerHTML = `
                 <td>${fechaFormateada}</td>
@@ -581,14 +595,12 @@ class TurnosManager {
                 <td>${estadoBadge}</td>
                 <td><strong>$${turno.precio.toLocaleString()}</strong></td>
                 <td>
-                    <div class="btn-group btn-group-sm">
+                    <div class="d-flex gap-1 flex-wrap">
+                        ${btnCompletar}
+                        ${btnNoAsistio}
                         ${whatsappBtn}
-                        <button class="btn btn-outline-warning btn-sm" onclick="editarTurno(${turno.id})" title="Editar">
-                            <i class="bi bi-pencil"></i>
-                        </button>
-                        <button class="btn btn-outline-danger btn-sm" onclick="cancelarTurno(${turno.id})" title="Cancelar">
-                            <i class="bi bi-trash"></i>
-                        </button>
+                        <button class="table-action-btn btn-edit-a" onclick="editarTurno(${turno.id})" title="Editar"><i class="bi bi-pencil"></i></button>
+                        <button class="table-action-btn btn-cancel-a" onclick="cancelarTurno(${turno.id})" title="Cancelar"><i class="bi bi-trash"></i></button>
                     </div>
                 </td>
             `;
@@ -659,11 +671,16 @@ class TurnosManager {
 
     getEstadoBadge(estado) {
         const badges = {
-            'confirmado': '<span class="badge bg-success">Confirmado</span>',
-            'pendiente': '<span class="badge bg-warning text-dark">Pendiente</span>',
-            'cancelado': '<span class="badge bg-danger">Cancelado</span>'
+            'PENDIENTE':    '<span class="badge" style="background:rgba(251,191,36,0.2);color:#fbbf24;border:1px solid rgba(251,191,36,0.4);">⏳ Pendiente</span>',
+            'COMPLETADO':   '<span class="badge" style="background:rgba(52,211,153,0.2);color:#34d399;border:1px solid rgba(52,211,153,0.4);">✅ Completado</span>',
+            'CANCELADO':    '<span class="badge" style="background:rgba(239,68,68,0.2);color:#f87171;border:1px solid rgba(239,68,68,0.4);">❌ Cancelado</span>',
+            'NO_ASISTIO':   '<span class="badge" style="background:rgba(148,163,184,0.2);color:#94a3b8;border:1px solid rgba(148,163,184,0.4);">🚫 No asistió</span>',
+            // Compatibilidad con valores viejos
+            'confirmado':   '<span class="badge" style="background:rgba(52,211,153,0.2);color:#34d399;border:1px solid rgba(52,211,153,0.4);">✅ Completado</span>',
+            'pendiente':    '<span class="badge" style="background:rgba(251,191,36,0.2);color:#fbbf24;border:1px solid rgba(251,191,36,0.4);">⏳ Pendiente</span>',
+            'cancelado':    '<span class="badge" style="background:rgba(239,68,68,0.2);color:#f87171;border:1px solid rgba(239,68,68,0.4);">❌ Cancelado</span>'
         };
-        return badges[estado] || '<span class="badge bg-secondary">Desconocido</span>';
+        return badges[estado] || `<span class="badge bg-secondary">❓ ${estado || 'Pendiente'}</span>`;
     }
 
     aplicarFiltros() {
@@ -1195,6 +1212,19 @@ class TurnosManager {
         }
     }
 
+    async cambiarEstadoTurno(id, estado) {
+        if (!confirm(`¿Cambiar el estado del turno a "${estado}"?`)) return;
+        try {
+            await this.apiService.updateEstadoTurno(id, estado);
+            NotificationService.show(`Estado actualizado a ${estado}`, 'success');
+            await this.cargarTurnosDesdeAPI();
+            this.mostrarTurnos();
+        } catch (error) {
+            console.error('Error al cambiar estado:', error);
+            NotificationService.showError('Error al actualizar el estado del turno.');
+        }
+    }
+
     // Método público para refrescar datos
     async refreshData() {
         try {
@@ -1260,6 +1290,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.seleccionarDia         = (f)  => window.turnosManager?.seleccionarDia(f);
     window.editarTurno            = (id) => window.turnosManager?.editarTurno(id);
     window.cancelarTurno          = (id) => window.turnosManager?.cancelarTurno(id);
+    window.cambiarEstadoTurno     = (id, estado) => window.turnosManager?.cambiarEstadoTurno(id, estado);
     window.guardarEdicionTurno    = ()   => window.turnosManager?.guardarEdicionTurno();
     window.aplicarFiltros         = ()   => window.turnosManager?.aplicarFiltros();
     window.limpiarFiltros         = ()   => window.turnosManager?.limpiarFiltros();
@@ -1270,17 +1301,36 @@ document.addEventListener('DOMContentLoaded', () => {
             const session = sessionStorage.getItem('barberia_admin');
             if (!session) return;
             const { slug } = JSON.parse(session);
-            const res = await fetch(`http://localhost:8080/barberias/slug/${slug}`);
+            const { API_BASE_URL } = await import('./config.js');
+            const res = await fetch(`${API_BASE_URL}/barberias/slug/${slug}`);
             if (!res.ok) return;
             const data = await res.json();
             const horaInicio = document.getElementById('configHoraInicio');
             const horaFin    = document.getElementById('configHoraFin');
             const intervalo  = document.getElementById('configIntervalo');
+            const telefono   = document.getElementById('configTelefono');
+            const logoUrl    = document.getElementById('configLogoUrl');
+            const bannerUrl  = document.getElementById('configBannerUrl');
             if (horaInicio) horaInicio.value = data.horaInicio || '09:00';
             if (horaFin)    horaFin.value    = data.horaFin    || '18:00';
             if (intervalo)  intervalo.value  = String(data.intervaloMinutos || 30);
+            if (telefono)   telefono.value   = data.telefono   || '';
+            if (logoUrl)    logoUrl.value    = data.logoUrl    || '';
+            if (bannerUrl)  bannerUrl.value  = data.bannerUrl  || '';
+            // Mostrar preview del logo si existe
+            if (data.logoUrl) actualizarPreviewLogo(data.logoUrl);
         } catch(e) { console.error('Error al cargar config:', e); }
     }
+
+    function actualizarPreviewLogo(url) {
+        const preview = document.getElementById('brandingPreview');
+        const img = document.getElementById('previewLogoImg');
+        if (preview && img && url) { img.src = url; preview.style.display = 'block'; }
+        else if (preview) { preview.style.display = 'none'; }
+    }
+
+    // Preview en tiempo real al escribir URL del logo
+    document.getElementById('configLogoUrl')?.addEventListener('input', (e) => actualizarPreviewLogo(e.target.value));
 
     const formConfig = document.getElementById('formConfiguracion');
     if (formConfig) {
@@ -1293,13 +1343,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 const payload = {
                     horaInicio:       document.getElementById('configHoraInicio')?.value,
                     horaFin:          document.getElementById('configHoraFin')?.value,
-                    intervaloMinutos: Number(document.getElementById('configIntervalo')?.value)
+                    intervaloMinutos: Number(document.getElementById('configIntervalo')?.value),
+                    telefono:         document.getElementById('configTelefono')?.value,
                 };
-                // PUT necesita credenciales de superadmin, usamos PATCH genérico de admin
-                // Como solución rápida, persistimos en localStorage para que scripts.js lo lea
+                const { getAuthHeaders, API_BASE_URL } = await import('./config.js');
+                const res = await fetch(`${API_BASE_URL}/barberias/${id}/config`, {
+                    method: 'PATCH',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(payload)
+                });
+                if (!res.ok) throw new Error('Error al guardar');
                 localStorage.setItem('barberiaConfig_' + id, JSON.stringify(payload));
-                alert('✅ Configuración guardada localmente. Los clientes verán los nuevos horarios al reservar.');
-            } catch(e) { console.error('Error al guardar config:', e); }
+                const btn = document.getElementById('btnGuardarConfig');
+                if (btn) { btn.textContent = '✅ Guardado!'; setTimeout(() => btn.textContent = 'Guardar Cambios', 2000); }
+            } catch(e) { 
+                console.error('Error al guardar config:', e); 
+                alert('❌ Error al guardar la configuración. Intentalo de nuevo.');
+            }
         });
     }
 

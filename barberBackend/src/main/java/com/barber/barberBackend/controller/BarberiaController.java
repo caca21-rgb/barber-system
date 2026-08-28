@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -22,6 +24,7 @@ import com.barber.barberBackend.repository.IServicioRepository;
 import com.barber.barberBackend.service.BarberiaService;
 import com.barber.barberBackend.service.TurnoService;
 import com.barber.barberBackend.security.JwtUtil;
+import com.barber.barberBackend.security.LoginAttemptService;
 
 @RestController
 @RequestMapping("/barberias")
@@ -39,6 +42,12 @@ public class BarberiaController extends GenericController<Barberia, Long, Barber
 
     @Autowired
     private JwtUtil jwtUtil;
+
+    @Autowired
+    private LoginAttemptService loginAttemptService;
+
+    @Autowired
+    private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
     /** Credenciales del superadmin (definidas en application.properties) */
     @Value("${superadmin.email:superadmin@barbersystem.com}")
@@ -61,25 +70,41 @@ public class BarberiaController extends GenericController<Barberia, Long, Barber
 
     @Operation(summary = "Login de barbería", description = "Autentica una barbería por email y contraseña y devuelve JWT")
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody Map<String, String> request) {
+    public ResponseEntity<?> login(@RequestBody Map<String, String> request, HttpServletRequest httpRequest) {
+        String ip = loginAttemptService.getClientIP(httpRequest);
+        if (loginAttemptService.isBlocked(ip)) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .body("Demasiados intentos fallidos. Por favor, espere 15 minutos e intente nuevamente.");
+        }
+
         String email = request.get("email");
         String contrasenia = request.get("contrasenia");
         try {
             Barberia barberia = service.login(email, contrasenia);
+
+            // Verificar vencimiento de suscripción
+            if (barberia.getPlanVencimiento() != null && barberia.getPlanVencimiento().isBefore(LocalDate.now())) {
+                return ResponseEntity.status(HttpStatus.PAYMENT_REQUIRED)
+                        .body("Tu suscripción ha vencido. Por favor, contactá al administrador para renovarla.");
+            }
+
             String token = jwtUtil.generateToken(barberia.getId(), barberia.getSlug(), barberia.getEmail());
-            
+            loginAttemptService.loginSucceeded(ip);
             Map<String, Object> response = new HashMap<>();
             response.put("token", token);
             response.put("id", barberia.getId());
             response.put("nombreNegocio", barberia.getNombreNegocio());
             response.put("slug", barberia.getSlug());
             response.put("activa", barberia.isActiva());
+            response.put("plan", barberia.getPlan());
+            response.put("planVencimiento", barberia.getPlanVencimiento());
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
             if ("CUENTA_DESACTIVADA".equals(e.getMessage())) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body("Cuenta desactivada. Contacta al administrador.");
             }
+            loginAttemptService.loginFailed(ip);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Credenciales inválidas");
         }
     }
@@ -106,6 +131,9 @@ public class BarberiaController extends GenericController<Barberia, Long, Barber
                 barberia.setSlug(generatedSlug);
             }
 
+            // Encriptar contraseña
+            barberia.setContrasenia(passwordEncoder.encode(barberia.getContrasenia()));
+
             barberia.setActiva(true); // Activa por defecto al registrarse
             Barberia nueva = service.save(barberia);
             
@@ -128,16 +156,39 @@ public class BarberiaController extends GenericController<Barberia, Long, Barber
 
     @Operation(summary = "Login de superadmin")
     @PostMapping("/superadmin/login")
-    public ResponseEntity<?> superadminLogin(@RequestBody Map<String, String> request) {
+    public ResponseEntity<?> superadminLogin(@RequestBody Map<String, String> request, HttpServletRequest httpRequest) {
+        String ip = loginAttemptService.getClientIP(httpRequest);
+        if (loginAttemptService.isBlocked(ip)) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .body("Demasiados intentos fallidos. Por favor, espere 15 minutos e intente nuevamente.");
+        }
+
         String email = request.get("email");
         String password = request.get("password");
         if (isSuperAdmin(email, password)) {
+            loginAttemptService.loginSucceeded(ip);
             Map<String, Object> response = new HashMap<>();
             response.put("role", "SUPERADMIN");
             response.put("email", email);
             return ResponseEntity.ok(response);
         }
+        
+        loginAttemptService.loginFailed(ip);
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Credenciales de superadmin inválidas");
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // Superadmin - Obtener Todas
+    // ─────────────────────────────────────────────────────────
+    @Operation(summary = "Obtener todas las barberías (SuperAdmin)")
+    @GetMapping("/superadmin/all")
+    public ResponseEntity<?> getAllForSuperAdmin(
+            @RequestHeader(value = "X-SuperAdmin-Email", required = false) String email,
+            @RequestHeader(value = "X-SuperAdmin-Password", required = false) String password) {
+        if (!isSuperAdmin(email, password)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Acceso denegado");
+        }
+        return ResponseEntity.ok(service.findAll());
     }
 
     // ─────────────────────────────────────────────────────────
@@ -189,6 +240,11 @@ public class BarberiaController extends GenericController<Barberia, Long, Barber
                         return ResponseEntity.status(HttpStatus.FORBIDDEN)
                                 .<Object>body("Esta barbería no está disponible actualmente.");
                     }
+                    // Verificar vencimiento de suscripción
+                    if (b.getPlanVencimiento() != null && b.getPlanVencimiento().isBefore(LocalDate.now())) {
+                        return ResponseEntity.status(HttpStatus.PAYMENT_REQUIRED)
+                                .<Object>body("Suscripción vencida. Contacta al administrador para renovar.");
+                    }
                     Map<String, Object> info = new HashMap<>();
                     info.put("id", b.getId());
                     info.put("nombreNegocio", b.getNombreNegocio());
@@ -197,6 +253,8 @@ public class BarberiaController extends GenericController<Barberia, Long, Barber
                     info.put("horaInicio", b.getHoraInicio());
                     info.put("horaFin", b.getHoraFin());
                     info.put("intervaloMinutos", b.getIntervaloMinutos());
+                    info.put("logoUrl", b.getLogoUrl());
+                    info.put("bannerUrl", b.getBannerUrl());
                     return ResponseEntity.ok((Object) info);
                 })
                 .orElseGet(() -> ResponseEntity.notFound().build());
@@ -235,7 +293,7 @@ public class BarberiaController extends GenericController<Barberia, Long, Barber
     }
 
     @Operation(summary = "Actualizar datos de una barbería (Superadmin)")
-    @PutMapping("/{id}")
+    @PutMapping("/superadmin/{id}")
     public ResponseEntity<?> actualizarBarberia(
             @PathVariable Long id,
             @RequestBody java.util.Map<String, Object> datos,
@@ -256,13 +314,16 @@ public class BarberiaController extends GenericController<Barberia, Long, Barber
                         b.setEmail(datos.get("email").toString());
                     if (datos.containsKey("contrasenia") && datos.get("contrasenia") != null
                             && !datos.get("contrasenia").toString().isBlank())
-                        b.setContrasenia(datos.get("contrasenia").toString());
+                        b.setContrasenia(passwordEncoder.encode(datos.get("contrasenia").toString()));
                     if (datos.containsKey("telefono") && datos.get("telefono") != null)
                         b.setTelefono(datos.get("telefono").toString());
                     if (datos.containsKey("planVencimiento") && datos.get("planVencimiento") != null
                             && !datos.get("planVencimiento").toString().isBlank())
                         b.setPlanVencimiento(LocalDate.parse(datos.get("planVencimiento").toString()));
-                        
+                    if (datos.containsKey("plan") && datos.get("plan") != null)
+                        b.setPlan(datos.get("plan").toString());
+                    if (datos.containsKey("activa"))
+                        b.setActiva(Boolean.parseBoolean(datos.get("activa").toString()));
                     if (datos.containsKey("horaInicio") && datos.get("horaInicio") != null)
                         b.setHoraInicio(datos.get("horaInicio").toString());
                     if (datos.containsKey("horaFin") && datos.get("horaFin") != null)
@@ -276,7 +337,7 @@ public class BarberiaController extends GenericController<Barberia, Long, Barber
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @Operation(summary = "Actualizar configuración de horarios (Panel Barbería)")
+    @Operation(summary = "Actualizar configuración de horarios y branding (Panel Barbería)")
     @PatchMapping("/{id}/config")
     public ResponseEntity<?> actualizarConfiguracion(
             @PathVariable Long id,
@@ -290,10 +351,16 @@ public class BarberiaController extends GenericController<Barberia, Long, Barber
                         b.setHoraFin(datos.get("horaFin").toString());
                     if (datos.containsKey("intervaloMinutos") && datos.get("intervaloMinutos") != null)
                         b.setIntervaloMinutos(Integer.parseInt(datos.get("intervaloMinutos").toString()));
-                        
+                    if (datos.containsKey("telefono") && datos.get("telefono") != null)
+                        b.setTelefono(datos.get("telefono").toString());
+                    if (datos.containsKey("logoUrl") && datos.get("logoUrl") != null)
+                        b.setLogoUrl(datos.get("logoUrl").toString());
+                    if (datos.containsKey("bannerUrl") && datos.get("bannerUrl") != null)
+                        b.setBannerUrl(datos.get("bannerUrl").toString());
                     service.save(b);
                     return ResponseEntity.ok((Object) b);
                 })
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 }
+

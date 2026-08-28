@@ -38,7 +38,7 @@ public class TurnoService extends GenericService<Turno, Long, ITurnoRepository> 
     EmailService emailService;
 
     @Override
-    public void save(Turno entity) {
+    public Turno save(Turno entity) {
         try {
             Cliente cliente = entity.getCliente();
             
@@ -84,16 +84,17 @@ public class TurnoService extends GenericService<Turno, Long, ITurnoRepository> 
             
             // Validamos que la fecha y hora del turno sea válida según el horario de la barbería
             validateDateTime(entity);
-            
-            repository.save(entity);
+
+            Turno savedEntity = repository.save(entity);
             
             // Enviar email de confirmación (si hay un cliente con email válido)
             try {
-                emailService.enviarConfirmacionTurno(entity);
+                emailService.enviarConfirmacionTurno(savedEntity);
             } catch (Exception ex) {
-                logger.error("Error al enviar email de confirmación de turno id {}", entity.getId(), ex);
+                logger.error("Error al enviar email de confirmación de turno id {}", savedEntity.getId(), ex);
             }
 
+            return savedEntity;
         } catch (Exception e) {
             throw new RuntimeException("Error al guardar el turno: " + e.getMessage(), e);
         }

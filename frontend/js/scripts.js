@@ -263,9 +263,28 @@ document.addEventListener("DOMContentLoaded", async () => {
   try {
     barberiaInfo = await API.obtenerInfoBarberia();
     // Si el backend no devuelve horaInicio/horaFin (campo nuevo), poner defaults
-    if (!barberiaInfo.horaInicio)      barberiaInfo.horaInicio      = "09:00";
-    if (!barberiaInfo.horaFin)         barberiaInfo.horaFin         = "18:00";
+    if (!barberiaInfo.horaInicio)       barberiaInfo.horaInicio       = "09:00";
+    if (!barberiaInfo.horaFin)          barberiaInfo.horaFin          = "18:00";
     if (!barberiaInfo.intervaloMinutos) barberiaInfo.intervaloMinutos = 30;
+
+    // Aplicar branding de la barbería
+    if (barberiaInfo.nombreNegocio) {
+      document.querySelectorAll('[data-barberia-nombre]').forEach(el => el.textContent = barberiaInfo.nombreNegocio);
+      document.title = `${barberiaInfo.nombreNegocio} — Reservá tu turno`;
+    }
+    if (barberiaInfo.logoUrl) {
+      document.querySelectorAll('[data-barberia-logo]').forEach(el => {
+        if (el.tagName === 'IMG') el.src = barberiaInfo.logoUrl;
+        else el.style.backgroundImage = `url(${barberiaInfo.logoUrl})`;
+      });
+    }
+    if (barberiaInfo.bannerUrl) {
+      document.querySelectorAll('[data-barberia-banner]').forEach(el => {
+        el.style.backgroundImage = `url(${barberiaInfo.bannerUrl})`;
+        el.style.backgroundSize = 'cover';
+        el.style.backgroundPosition = 'center';
+      });
+    }
   } catch (e) {
     console.error("Error al cargar info de barbería:", e);
     barberiaInfo = { id: null, horaInicio: "09:00", horaFin: "18:00", intervaloMinutos: 30 };

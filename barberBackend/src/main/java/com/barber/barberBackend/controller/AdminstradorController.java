@@ -20,6 +20,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import java.util.Map;
 import java.util.HashMap;
 import com.barber.barberBackend.security.JwtUtil;
+import com.barber.barberBackend.security.LoginAttemptService;
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/administradores")
@@ -31,16 +33,26 @@ public class AdminstradorController extends GenericController<Administrador, Lon
     @Autowired
     private JwtUtil jwtUtil;
 
+    @Autowired
+    private LoginAttemptService loginAttemptService;
+
     @Operation(summary = "Iniciar sesión", description = "Autentica un administrador por email y contraseña")
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Inicio de sesión exitoso"),
         @ApiResponse(responseCode = "401", description = "Credenciales inválidas", content = @Content)
     })
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody Administrador request) {
+    public ResponseEntity<?> login(@RequestBody Administrador request, HttpServletRequest httpRequest) {
+        String ip = loginAttemptService.getClientIP(httpRequest);
+        if (loginAttemptService.isBlocked(ip)) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .body("Demasiados intentos fallidos. Por favor, espere 15 minutos e intente nuevamente.");
+        }
+
         try {
             Administrador admin = service.login(request.getEmail(), request.getContrasenia());
             
+            loginAttemptService.loginSucceeded(ip);
             // Generar token JWT. Si el admin tiene barberia, lo asociamos
             Long barberiaId = admin.getBarberia() != null ? admin.getBarberia().getId() : null;
             String slug = admin.getBarberia() != null ? admin.getBarberia().getSlug() : null;
@@ -52,6 +64,7 @@ public class AdminstradorController extends GenericController<Administrador, Lon
 
             return ResponseEntity.ok(response);
         } catch (Exception e) {
+            loginAttemptService.loginFailed(ip);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Credenciales inválidas");
         }
     }

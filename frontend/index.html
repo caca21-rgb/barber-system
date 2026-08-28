@@ -265,8 +265,8 @@
   <!-- ── Navbar ── -->
   <nav class="navbar-th d-flex align-items-center justify-content-between" style="z-index:100;">
     <a href="index.html" class="d-flex align-items-center gap-2 text-decoration-none">
-      <img src="./img/logo-blue.svg" alt="Barber System" style="height:40px; object-fit:contain; border-radius:8px;" />
-      <span class="d-none d-sm-block fw-bold text-gradient" style="font-family:'Playfair Display',serif; font-size:1.1rem;">Barber System</span>
+      <img src="./img/logo-blue.svg" alt="Barber System" data-barberia-logo style="height:40px; object-fit:contain; border-radius:8px;" />
+      <span class="d-none d-sm-block fw-bold text-gradient" data-barberia-nombre style="font-family:'Playfair Display',serif; font-size:1.1rem;">Barber System</span>
     </a>
     <a href="reserva.html" class="btn-primario" style="padding:0.5rem 1.1rem; font-size:0.82rem;">
       <i class="bi bi-calendar-check"></i>
@@ -412,7 +412,10 @@
       <hr class="divider-accent" />
       <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
         <small class="text-muted-th">© 2026 Barber System. Todos los derechos reservados.</small>
-
+        <div class="d-flex gap-3">
+          <a href="privacidad.html" class="text-decoration-none" style="color:var(--primary-light); font-size:0.9rem;">Privacidad</a>
+          <a href="terminos.html" class="text-decoration-none" style="color:var(--primary-light); font-size:0.9rem;">Términos de Servicio</a>
+        </div>
       </div>
     </div>
   </footer>
@@ -503,6 +506,14 @@
         // Actualizar UI
         document.getElementById('pageTitle').textContent = data.nombreNegocio;
         document.getElementById('tenantName').textContent = data.nombreNegocio;
+        document.querySelectorAll('[data-barberia-nombre]').forEach(el => el.textContent = data.nombreNegocio);
+        
+        if (data.logoUrl) {
+          document.querySelectorAll('[data-barberia-logo]').forEach(el => {
+            if (el.tagName === 'IMG') el.src = data.logoUrl;
+            else el.style.backgroundImage = `url(${data.logoUrl})`;
+          });
+        }
 
       } catch (err) {
         console.error('Error fetching barberia:', err);

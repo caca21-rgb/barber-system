@@ -20,6 +20,9 @@ import org.springframework.http.ResponseEntity;
 
 import com.barber.barberBackend.repository.ITurnoRepository;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/turnos")
@@ -58,6 +61,18 @@ public class TurnoController extends GenericController<Turno, Long, TurnoService
             return ResponseEntity.ok((Object) repository.findByBarberiaId(barberiaId));
         }).orElseGet(() -> ResponseEntity.notFound().build());
     }
+    @Operation(summary = "Actualizar estado de un turno")
+    @PatchMapping("/{id}/estado")
+    public ResponseEntity<?> updateEstado(@PathVariable Long id, @RequestBody Map<String, String> body) {
+        return service.findById(id).map(turno -> {
+            String nuevoEstado = body.get("estado");
+            if (nuevoEstado == null || nuevoEstado.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("Estado inválido.");
+            }
+            turno.setEstado(nuevoEstado);
+            service.save(turno);
+            return ResponseEntity.ok((Object) turno);
+        }).orElseGet(() -> ResponseEntity.notFound().build());
+    }
 }
-
 

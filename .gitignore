@@ -49,3 +49,7 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Base de datos local
+barberBackend/data/
+*.db
