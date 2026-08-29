@@ -1,4 +1,4 @@
-import { ENDPOINTS, HORARIOS_LABORALES, getAuthHeaders } from "./config.js";
+import { API_BASE_URL, ENDPOINTS, HORARIOS_LABORALES, getAuthHeaders } from "./config.js";
 
 // Llamadas a la API
 class ApiService {
@@ -1598,7 +1598,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         try {
-            const res = await fetch(`http://localhost:8080/turnos`, {
+            const res = await fetch(`${API_BASE_URL}/turnos`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
@@ -1641,7 +1641,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         try {
-            const res = await fetch(`http://localhost:8080/turnos`, {
+            const res = await fetch(`${API_BASE_URL}/turnos`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
