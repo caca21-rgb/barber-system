@@ -68,12 +68,15 @@ document.addEventListener('DOMContentLoaded', () => {
       const editBtn = `<button class="btn-sm-accent ms-1" onclick="window.abrirEditar(${b.id})"><i class="bi bi-pencil"></i> Editar</button>`;
 
       const tr = document.createElement('tr');
-      // Calcula la URL base de forma dinámica para soportar GitHub Pages
-      // con subcarpeta (ej. /barber-system/) y dominios propios en la raíz.
-      // portal-z/ está 1 nivel abajo de la raíz del sitio desplegado.
-      const pathSegments = window.location.pathname.split('/').filter(Boolean);
-      const basePath = pathSegments.slice(0, -2).join('/');
+      // Calcula la URL base de forma dinamica para soportar GitHub Pages
+      // con subcarpeta (ej. /barber-system/) y dominios propios en la raiz.
+      // GitHub Pages sirve el directorio sin "index.html" en pathname,
+      // por eso se normaliza la barra final y se quita solo 1 segmento.
+      const _pathname = window.location.pathname.replace(/\/$/, '');
+      const pathSegments = _pathname.split('/').filter(Boolean);
+      const basePath = pathSegments.slice(0, -1).join('/');
       const reservaBaseUrl = `${window.location.origin}${basePath ? '/' + basePath : ''}/index.html`;
+
       tr.innerHTML = `
         <td class="text-muted">#${b.id}</td>
         <td class="fw-bold text-white">${b.nombreNegocio}</td>

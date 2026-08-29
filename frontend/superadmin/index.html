@@ -453,22 +453,31 @@
   }
 
   /**
-   * Devuelve la URL absoluta al index.html de la raíz del sitio,
+   * Devuelve la URL absoluta al index.html de la raiz del sitio,
    * compatible con GitHub Pages de tipo "project page" (ej. /barber-system/)
-   * y con dominios propios en la raíz (/).
+   * y con dominios propios en la raiz (/).
    *
-   * Estrategia: desde la ruta actual (/barber-system/superadmin/index.html),
-   * sube hasta encontrar el directorio raíz del repo (superadmin/ está 1 nivel
-   * abajo de frontend/, que es la raíz desplegada).
+   * Cuando GitHub Pages sirve /barber-system/superadmin/ como indice de carpeta,
+   * window.location.pathname es "/barber-system/superadmin/" (SIN "index.html").
+   * Por eso hay que quitar solo 1 segmento (el directorio "superadmin"),
+   * no 2 como haria una ruta explicita con nombre de archivo.
    */
   function getReservaBaseUrl() {
-    // pathname ej: "/barber-system/superadmin/index.html"
-    // Queremos:    "/barber-system/index.html"
-    const segments = window.location.pathname.split('/').filter(Boolean);
-    // Quita el último segmento (archivo actual, ej "index.html") y el directorio
-    // que contiene este archivo (ej "superadmin"), luego reconstruye la ruta base
-    const basePath = segments.slice(0, -2).join('/');
-    return `${window.location.origin}${basePath ? '/' + basePath : ''}/index.html`;
+    // Normaliza: quita la barra final si existe (GitHub Pages la incluye)
+    // "/barber-system/superadmin/" => "/barber-system/superadmin"
+    const pathname = window.location.pathname.replace(/\/$/, '');
+    const segments = pathname.split('/').filter(Boolean);
+
+    // segments: ["barber-system", "superadmin"]
+    // Quita solo el ultimo segmento (el directorio actual: "superadmin")
+    const basePath = segments.slice(0, -1).join('/');
+
+    const result = `${window.location.origin}${basePath ? '/' + basePath : ''}/index.html`;
+
+    // Log de diagnostico - visible en la consola del navegador
+    console.log('[getReservaBaseUrl]', { pathname, segments, basePath, result });
+
+    return result;
   }
 
   function copiarLinkReserva(slug) {
