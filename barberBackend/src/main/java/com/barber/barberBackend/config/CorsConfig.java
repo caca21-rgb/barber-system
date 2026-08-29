@@ -1,24 +1,37 @@
 package com.barber.barberBackend.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
+import java.util.Arrays;
+import java.util.List;
+
 @Configuration
 public class CorsConfig {
+
+    /**
+     * Lista de orígenes permitidos, leída de la propiedad allowed.origins.
+     * Soporta múltiples orígenes separados por coma.
+     * Ejemplo: http://localhost:3000,https://caca21-rgb.github.io
+     */
+    @Value("${allowed.origins}")
+    private String allowedOriginsRaw;
 
     @Bean
     public CorsFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
 
-        // Orígenes permitidos (frontend en desarrollo)
-        config.addAllowedOrigin("http://localhost:3000");
-        config.addAllowedOrigin("http://127.0.0.1:3000");
-        // Puerto alternativo para superadmin o demos
-        config.addAllowedOrigin("http://localhost:5500");
-        config.addAllowedOrigin("http://127.0.0.1:5500");
+        // Parsear la lista separada por comas y limpiar espacios
+        List<String> origins = Arrays.stream(allowedOriginsRaw.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .toList();
+
+        origins.forEach(config::addAllowedOrigin);
 
         config.addAllowedMethod("*"); // GET, POST, PUT, PATCH, DELETE, OPTIONS
         config.addAllowedHeader("*");
