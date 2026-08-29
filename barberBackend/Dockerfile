@@ -17,6 +17,6 @@ FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
 
-# Usar el puerto que asigna Render via $PORT, con 8080 como fallback local
 EXPOSE 8080
-ENTRYPOINT ["sh", "-c", "java -Xmx400m -Xms200m -jar app.jar --server.port=${PORT:-8080}"]
+# -XX:+UseSerialGC usa menos overhead que G1GC en contenedores pequeños
+ENTRYPOINT ["sh", "-c", "java -Xmx180m -Xms64m -XX:+UseSerialGC -jar app.jar --server.port=${PORT:-8080}"]

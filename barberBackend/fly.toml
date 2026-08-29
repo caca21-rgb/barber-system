@@ -1,0 +1,20 @@
+# fly.toml — Configuración para Fly.io
+# Documentación: https://fly.io/docs/reference/configuration/
+
+app = "barber-system-backend"
+primary_region = "mia"  # Miami — el más cercano a América Latina
+
+[build]
+  dockerfile = "Dockerfile"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+
+[[vm]]
+  memory = "512mb"
+  cpu_kind = "shared"
+  cpus = 1
