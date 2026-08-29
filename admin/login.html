@@ -429,6 +429,9 @@
         localStorage.setItem('adminEmail', email);
         if (data?.nombreNegocio) localStorage.setItem('adminNombre', data.nombreNegocio);
         
+        // FLAG requerido por panel-turnos.html para verificar sesión activa
+        localStorage.setItem('adminLoggedIn', 'true');
+
         // Needed for panel-turnos.js API calls
         sessionStorage.setItem('barberia_admin', JSON.stringify({ id: data.id, slug: data.slug }));
         
@@ -439,6 +442,7 @@
         btnLogin.innerHTML = '<i class="bi bi-check-circle me-2"></i> ¡Acceso concedido!';
         btnLogin.style.background = 'linear-gradient(135deg,#4caf7d,#7dcfa0)';
         setTimeout(() => { window.location.href = './panel-turnos.html'; }, 800);
+
       } else {
         showError('Credenciales incorrectas. Verificá tu email y contraseña.');
         setLoading(false);
