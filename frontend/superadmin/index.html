@@ -452,8 +452,27 @@
     renderTabla(filtrados);
   }
 
+  /**
+   * Devuelve la URL absoluta al index.html de la raíz del sitio,
+   * compatible con GitHub Pages de tipo "project page" (ej. /barber-system/)
+   * y con dominios propios en la raíz (/).
+   *
+   * Estrategia: desde la ruta actual (/barber-system/superadmin/index.html),
+   * sube hasta encontrar el directorio raíz del repo (superadmin/ está 1 nivel
+   * abajo de frontend/, que es la raíz desplegada).
+   */
+  function getReservaBaseUrl() {
+    // pathname ej: "/barber-system/superadmin/index.html"
+    // Queremos:    "/barber-system/index.html"
+    const segments = window.location.pathname.split('/').filter(Boolean);
+    // Quita el último segmento (archivo actual, ej "index.html") y el directorio
+    // que contiene este archivo (ej "superadmin"), luego reconstruye la ruta base
+    const basePath = segments.slice(0, -2).join('/');
+    return `${window.location.origin}${basePath ? '/' + basePath : ''}/index.html`;
+  }
+
   function copiarLinkReserva(slug) {
-    const url = window.location.origin + '/index.html?slug=' + slug;
+    const url = getReservaBaseUrl() + '?slug=' + slug;
     navigator.clipboard.writeText(url).then(() => {
       toast('Enlace copiado al portapapeles: ' + url, 'success');
     }).catch(err => {
@@ -461,6 +480,7 @@
       toast('No se pudo copiar el enlace.', 'error');
     });
   }
+
 
   // ── Acciones ──────────────────────────────────────────────
   async function toggleActiva(id, activar) {

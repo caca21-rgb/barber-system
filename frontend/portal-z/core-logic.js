@@ -68,16 +68,23 @@ document.addEventListener('DOMContentLoaded', () => {
       const editBtn = `<button class="btn-sm-accent ms-1" onclick="window.abrirEditar(${b.id})"><i class="bi bi-pencil"></i> Editar</button>`;
 
       const tr = document.createElement('tr');
+      // Calcula la URL base de forma dinámica para soportar GitHub Pages
+      // con subcarpeta (ej. /barber-system/) y dominios propios en la raíz.
+      // portal-z/ está 1 nivel abajo de la raíz del sitio desplegado.
+      const pathSegments = window.location.pathname.split('/').filter(Boolean);
+      const basePath = pathSegments.slice(0, -2).join('/');
+      const reservaBaseUrl = `${window.location.origin}${basePath ? '/' + basePath : ''}/index.html`;
       tr.innerHTML = `
         <td class="text-muted">#${b.id}</td>
         <td class="fw-bold text-white">${b.nombreNegocio}</td>
-        <td><a href="../index.html?slug=${b.slug}" target="_blank" class="text-decoration-none" style="color:#3291FF;">${b.slug}</a></td>
+        <td><a href="${reservaBaseUrl}?slug=${b.slug}" target="_blank" class="text-decoration-none" style="color:#3291FF;">${b.slug}</a></td>
         <td>${b.email}</td>
         <td class="text-muted">${b.planVencimiento || 'Sin fecha'}</td>
         <td>${estadoBadge}</td>
         <td class="d-flex gap-1 flex-wrap">${toggleBtn}${editBtn}</td>
       `;
       tableBody.appendChild(tr);
+
     });
   }
 
