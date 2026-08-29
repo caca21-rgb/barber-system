@@ -458,10 +458,33 @@
     }
   }
 
-  // Redirect if already logged in (has valid token)
-  if (getAuthToken()) {
-    window.location.href = './panel-turnos.html';
-  }
+  // Redirige a panel-turnos solo si hay un token vigente (no expirado).
+  // Evita el bucle de redirección cuando el token existe pero está vencido.
+  (function checkExistingSession() {
+    const token = getAuthToken();
+    if (!token) return; // No hay token, mostrar login normalmente
+
+    try {
+      // Decodificar el payload del JWT (sin verificar firma — eso lo hace el backend)
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const nowSec  = Math.floor(Date.now() / 1000);
+
+      if (payload.exp && payload.exp > nowSec) {
+        // Token vigente → ir al panel
+        window.location.href = './panel-turnos.html';
+      } else {
+        // Token expirado → limpiarlo para que el usuario vea el login normal
+        setAuthToken(null);
+        localStorage.removeItem('jwt_token');
+        sessionStorage.removeItem('jwt_token');
+      }
+    } catch (_) {
+      // Token malformado → limpiar
+      localStorage.removeItem('jwt_token');
+      sessionStorage.removeItem('jwt_token');
+    }
+  })();
+
 
   // Clear error on input
   [emailInput, passInput].forEach(inp => {
