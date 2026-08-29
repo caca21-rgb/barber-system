@@ -318,8 +318,16 @@
 
 <div class="toast-notif" id="toastNotif"></div>
 
+<!-- Bridge: importa API_BASE_URL desde config.js y lo expone como variable global -->
+<script type="module">
+  import { API_BASE_URL } from '../js/config.js';
+  window.API_BASE_URL = API_BASE_URL;
+</script>
+
 <script>
-  const API = 'http://localhost:8080/barberias';
+  // API_BASE_URL viene del <script type="module"> de arriba via window.API_BASE_URL
+  // Fallback a producción si el módulo aún no cargó (no debería ocurrir)
+  const API = (window.API_BASE_URL ?? 'https://barber-system-vmxq.onrender.com') + '/barberias';
   let saEmail = '', saPass = '';
   let todasLasBarberias = [];
 
