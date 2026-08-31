@@ -1,19 +1,16 @@
-import { ENDPOINTS, getAuthHeaders } from './config.js';
+import { ENDPOINTS, getAuthHeaders, requireAuth, clearBarberiaSession, ADMIN_LOGIN_URL } from './config.js';
 
 let barberiaId = null;
 let modalInstancia = null;
 
 document.addEventListener('DOMContentLoaded', () => {
     // Verificar sesión admin
-    const session = sessionStorage.getItem('barberia_admin');
-    if (!session) {
-        window.location.href = './login.html';
-        return;
-    }
-    const adminData = JSON.parse(session);
-    barberiaId = adminData.id;
+    const session = requireAuth();
+    if (!session) return; // requireAuth ya hizo el redirect
+
+    barberiaId = session.id;
     
-    document.getElementById('sidebarBarberName').textContent = localStorage.getItem('adminNombre') || 'Admin Panel';
+    document.getElementById('sidebarBarberName').textContent = session.nombreNegocio || localStorage.getItem('adminNombre') || 'Admin Panel';
 
     // Sidebar overlay para móvil
     document.getElementById('sidebarToggle')?.addEventListener('click', () => {
@@ -28,14 +25,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('btnLogout')?.addEventListener('click', (e) => {
         e.preventDefault();
-        import('./config.js').then(module => {
-            module.clearBarberiaSession();
-            localStorage.removeItem('adminLoggedIn');
-            localStorage.removeItem('adminEmail');
-            localStorage.removeItem('adminNombre');
-            sessionStorage.removeItem('barberia_admin');
-            window.location.href = './login.html';
-        });
+        clearBarberiaSession();
+        window.location.replace(ADMIN_LOGIN_URL);
     });
 
     modalInstancia = new bootstrap.Modal(document.getElementById('modalServicio'));

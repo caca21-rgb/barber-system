@@ -103,6 +103,8 @@
     <a href="./panel-turnos.html" class="sidebar-nav-item"><i class="bi bi-calendar-check"></i> Turnos</a>
     <a href="./panel-estadisticas.html" class="sidebar-nav-item"><i class="bi bi-graph-up-arrow"></i> Estadísticas</a>
     <a href="./panel-clientes.html" class="sidebar-nav-item active"><i class="bi bi-people"></i> Clientes</a>
+    <a href="./panel-servicios.html" class="sidebar-nav-item"><i class="bi bi-scissors"></i> Servicios</a>
+    <a href="./panel-barberos.html" class="sidebar-nav-item"><i class="bi bi-person-badge"></i> Barberos</a>
   </nav>
 
   <div class="sidebar-footer">
@@ -177,27 +179,25 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script type="module">
-  import { ENDPOINTS, getAuthHeaders, clearBarberiaSession } from '../js/config.js';
+  // ── AUTH GUARD ─────────────────────────────────────────────────────────────
+  import { ENDPOINTS, getAuthHeaders, clearBarberiaSession, requireAuth, ADMIN_LOGIN_URL } from '../js/config.js';
 
   let todosLosClientes = [];
+  
+  const session = requireAuth();
+  if (!session) throw new Error('Sin sesión'); // requireAuth ya hizo el redirect
 
-  // Cargar info de sesión
-  const session = sessionStorage.getItem('barberia_admin');
-  if (!session) { window.location.href = './login.html'; }
-  const { id: barberiaId, slug } = JSON.parse(session || '{}');
-  const adminEmail = localStorage.getItem('adminEmail') || '—';
-  const adminNombre = localStorage.getItem('adminNombre') || 'Admin';
+  const { id: barberiaId } = session;
+  const adminEmail  = session.email  || localStorage.getItem('adminEmail')  || '—';
+  const adminNombre = session.nombreNegocio || localStorage.getItem('adminNombre') || 'Admin';
 
-  document.getElementById('adminName').textContent = adminNombre;
+  document.getElementById('adminName').textContent  = adminNombre;
   document.getElementById('adminEmail').textContent = adminEmail;
   document.getElementById('adminAvatar').textContent = adminNombre.charAt(0).toUpperCase();
 
   document.getElementById('btnLogout').addEventListener('click', () => {
     clearBarberiaSession();
-    localStorage.removeItem('adminEmail');
-    localStorage.removeItem('adminNombre');
-    sessionStorage.removeItem('barberia_admin');
-    window.location.href = './login.html';
+    window.location.replace(ADMIN_LOGIN_URL);
   });
 
   async function cargarClientes() {

@@ -188,6 +188,12 @@
     <a href="./panel-clientes.html" class="sidebar-nav-item" id="nav-clientes">
       <i class="bi bi-people"></i> Clientes
     </a>
+    <a href="./panel-servicios.html" class="sidebar-nav-item" id="nav-servicios">
+      <i class="bi bi-scissors"></i> Servicios
+    </a>
+    <a href="./panel-barberos.html" class="sidebar-nav-item" id="nav-barberos">
+      <i class="bi bi-person-badge"></i> Barberos
+    </a>
 
     <div style="font-size:0.68rem; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:0.1em; padding:0 0.5rem; margin:1.25rem 0 0.75rem;">Vistas</div>
     <button class="sidebar-nav-item w-100 text-start border-0" onclick="cambiarVista('lista')" id="nav-lista">
@@ -602,8 +608,33 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script type="module" src="../js/panel-turnos.js"></script>
+<script type="module">
+  import { requireAuth, clearBarberiaSession, ADMIN_LOGIN_URL } from '../js/config.js';
+
+  // ── AUTH GUARD ─────────────────────────────────────────────────────────────
+  // requireAuth() verifica sessionStorage.barberia_admin con id válido.
+  // Si no hay sesión, limpia el estado y hace replace() a login (sin loop).
+  const session = requireAuth();
+  if (session) {
+    console.log('[panel-turnos] Sesión válida. Barbería id:', session.id);
+    // Populate admin info
+    document.getElementById('adminName').textContent  = session.nombreNegocio || localStorage.getItem('adminNombre') || 'Admin';
+    document.getElementById('adminEmail').textContent = session.email || localStorage.getItem('adminEmail') || '';
+    const avatar = document.getElementById('adminAvatar');
+    if (avatar) avatar.textContent = (session.nombreNegocio || 'A').charAt(0).toUpperCase();
+
+    const fecha = new Date().toLocaleDateString('es-AR', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+    const fechaEl = document.getElementById('fechaHoy');
+    if (fechaEl) fechaEl.textContent = fecha.charAt(0).toUpperCase() + fecha.slice(1);
+  }
+
+  window.cerrarSesion = function() {
+    clearBarberiaSession();
+    window.location.replace(ADMIN_LOGIN_URL);
+  };
+</script>
 <script>
-  // Sidebar
+  // Sidebar (non-module para compatibilidad con onclick en HTML)
   function openSidebar()  { document.getElementById('sidebar').classList.add('open'); document.getElementById('sidebarOverlay').classList.add('show'); }
   function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebarOverlay').classList.remove('show'); }
 
@@ -617,33 +648,6 @@
     if (select) select.value = status;
     if (typeof aplicarFiltros === 'function') aplicarFiltros();
     if (window.turnosManager) window.turnosManager.aplicarFiltros();
-  }
-
-  // Admin info
-  document.addEventListener('DOMContentLoaded', () => {
-    const nombre = localStorage.getItem('adminNombre') || 'Admin';
-    const email  = localStorage.getItem('adminEmail') || '';
-    document.getElementById('adminName').textContent  = nombre;
-    document.getElementById('adminEmail').textContent = email;
-    const avatar = document.getElementById('adminAvatar');
-    if (avatar) avatar.textContent = nombre.charAt(0).toUpperCase();
-
-    // Date
-    const fecha = new Date().toLocaleDateString('es-AR', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
-    const fechaEl = document.getElementById('fechaHoy');
-    if (fechaEl) fechaEl.textContent = fecha.charAt(0).toUpperCase() + fecha.slice(1);
-
-    // Redirect if not logged in
-    if (!localStorage.getItem('adminLoggedIn')) {
-      window.location.href = './login.html';
-    }
-  });
-
-  function cerrarSesion() {
-    localStorage.removeItem('adminLoggedIn');
-    localStorage.removeItem('adminEmail');
-    localStorage.removeItem('adminNombre');
-    window.location.href = './login.html';
   }
 
   // Hidden select for backward compat with JS

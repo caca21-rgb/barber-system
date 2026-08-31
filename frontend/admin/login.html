@@ -55,7 +55,7 @@
       text-align: center;
       margin-bottom: 1.5rem;
     }
-    .visual-quote span { color: var(--gold-light); }
+    .visual-quote span { color: var(--gold-light, #D4AF37); }
     .visual-features { width: 100%; max-width: 320px; }
     .visual-feature {
       display: flex;
@@ -67,10 +67,10 @@
     .visual-feature:last-child { border-bottom: none; }
     .visual-feature-icon {
       width: 36px; height: 36px;
-      background: var(--primary-dim);
-      border-radius: var(--radius-sm);
+      background: rgba(99,102,241,0.15);
+      border-radius: 6px;
       display: flex; align-items: center; justify-content: center;
-      color: var(--primary);
+      color: #818cf8;
       flex-shrink: 0;
     }
     .visual-orbs {
@@ -131,11 +131,8 @@
       margin-bottom: 2.5rem;
       text-align: center;
     }
-    .login-header h1 {
-      font-size: 2rem;
-      margin-bottom: 0.5rem;
-    }
-    .login-header p { color: var(--muted-light); font-size: 0.9rem; }
+    .login-header h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+    .login-header p { color: var(--muted); font-size: 0.9rem; }
 
     /* Input group with icon */
     .input-icon-group { position: relative; }
@@ -146,15 +143,10 @@
       transform: translateY(-50%);
       color: var(--muted);
       pointer-events: none;
-      transition: var(--transition);
+      transition: color 0.25s;
     }
-    .input-icon-group .form-control {
-      padding-left: 3rem;
-    }
-    .input-icon-group .form-control:focus ~ .input-icon,
-    .input-icon-group .form-control:not(:placeholder-shown) ~ .input-icon {
-      color: var(--primary);
-    }
+    .input-icon-group .form-control { padding-left: 3rem; }
+    .input-icon-group .form-control:focus ~ .input-icon { color: #818cf8; }
     .toggle-password {
       position: absolute;
       right: 1rem;
@@ -166,10 +158,10 @@
       cursor: pointer;
       padding: 0;
       line-height: 1;
-      transition: var(--transition);
+      transition: color 0.25s;
       font-size: 1rem;
     }
-    .toggle-password:hover { color: var(--primary); }
+    .toggle-password:hover { color: #818cf8; }
 
     /* Login button shimmer */
     .btn-login {
@@ -183,10 +175,8 @@
     .btn-login::after {
       content: '';
       position: absolute;
-      top: -50%;
-      left: -75%;
-      width: 50%;
-      height: 200%;
+      top: -50%; left: -75%;
+      width: 50%; height: 200%;
       background: rgba(255,255,255,0.25);
       transform: skewX(-20deg);
       animation: shimmer 3s ease infinite;
@@ -194,11 +184,11 @@
 
     /* Error state */
     .login-error {
-      background: var(--danger-dim);
-      border: 1px solid var(--danger);
-      border-radius: var(--radius-md);
+      background: rgba(239,68,68,0.12);
+      border: 1px solid #ef4444;
+      border-radius: 8px;
       padding: 0.85rem 1rem;
-      color: var(--danger);
+      color: #f87171;
       font-size: 0.875rem;
       display: flex;
       align-items: center;
@@ -217,6 +207,9 @@
       animation: spin 0.7s linear infinite;
       display: inline-block;
     }
+
+    .footer-link { color: var(--muted); text-decoration: none; transition: color 0.25s; }
+    .footer-link:hover { color: #818cf8; }
   </style>
 </head>
 <body class="admin-panel">
@@ -245,22 +238,22 @@
       <div class="visual-feature">
         <div class="visual-feature-icon"><i class="bi bi-calendar-check"></i></div>
         <div>
-          <div class="text-cream" style="font-size:0.9rem; font-weight:500;">Gestión de turnos</div>
-          <div class="text-muted-th" style="font-size:0.78rem;">Visualizá y administrá reservas</div>
+          <div style="color:#f8fafc; font-size:0.9rem; font-weight:500;">Gestión de turnos</div>
+          <div style="color:#64748b; font-size:0.78rem;">Visualizá y administrá reservas</div>
         </div>
       </div>
       <div class="visual-feature">
         <div class="visual-feature-icon"><i class="bi bi-graph-up-arrow"></i></div>
         <div>
-          <div class="text-cream" style="font-size:0.9rem; font-weight:500;">Estadísticas en tiempo real</div>
-          <div class="text-muted-th" style="font-size:0.78rem;">Ingresos, clientes y tendencias</div>
+          <div style="color:#f8fafc; font-size:0.9rem; font-weight:500;">Estadísticas en tiempo real</div>
+          <div style="color:#64748b; font-size:0.78rem;">Ingresos, clientes y tendencias</div>
         </div>
       </div>
       <div class="visual-feature">
         <div class="visual-feature-icon"><i class="bi bi-people"></i></div>
         <div>
-          <div class="text-cream" style="font-size:0.9rem; font-weight:500;">Gestión de clientes</div>
-          <div class="text-muted-th" style="font-size:0.78rem;">Historial y datos de cada cliente</div>
+          <div style="color:#f8fafc; font-size:0.9rem; font-weight:500;">Gestión de clientes</div>
+          <div style="color:#64748b; font-size:0.78rem;">Historial y datos de cada cliente</div>
         </div>
       </div>
     </div>
@@ -331,7 +324,7 @@
           <div class="form-check">
             <input class="form-check-input" type="checkbox" id="rememberMe"
               style="border-color:rgba(99,102,241,0.4); background-color:var(--bg-surface);" />
-            <label class="form-check-label small text-muted-th" for="rememberMe">Recordarme</label>
+            <label class="form-check-label small" style="color:var(--muted);" for="rememberMe">Recordarme</label>
           </div>
         </div>
 
@@ -352,7 +345,7 @@
 
     <!-- Footer -->
     <div class="text-center mt-5">
-      <small class="text-muted-th">© 2026 Barber System. Todos los derechos reservados.</small>
+      <small style="color:var(--muted);">© 2026 Barber System. Todos los derechos reservados.</small>
     </div>
   </div>
 
@@ -360,8 +353,33 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script type="module">
-  import { API_BASE_URL, setAuthToken, getAuthToken } from '../js/config.js';
+  import {
+    API_BASE_URL,
+    ENDPOINTS,
+    ADMIN_PANEL_URL,
+    saveBarberiaSession,
+    getBarberiaSession,
+    isAuthenticated,
+    clearBarberiaSession,
+  } from '../js/config.js';
 
+  // ── PASO 0: Verificar sesión existente (ANTES de mostrar el form) ─────────
+  // IMPORTANTE: solo redirigir si la sesión es VÁLIDA (tiene id).
+  // Si el token/sesión está corrupto o incompleto, NO redirigir → muestra el login.
+  // Esto previene el loop: login.html → panel → login.html → ...
+  ;(function checkExistingSession() {
+    console.log('[Login] Verificando si ya hay sesión activa...');
+    if (isAuthenticated()) {
+      console.log('[Login] Sesión válida encontrada → redirigiendo al panel.');
+      window.location.replace(ADMIN_PANEL_URL);
+      return;
+    }
+    console.log('[Login] Sin sesión activa → mostrando formulario de login.');
+    // Limpiar cualquier estado residual corrupto para partir de cero
+    clearBarberiaSession();
+  })();
+
+  // ── DOM refs ──────────────────────────────────────────────────────────────
   const form        = document.getElementById('loginForm');
   const emailInput  = document.getElementById('email');
   const passInput   = document.getElementById('password');
@@ -397,7 +415,7 @@
     }
   }
 
-  // Submit
+  // ── Submit ────────────────────────────────────────────────────────────────
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     loginError.classList.add('d-none');
@@ -411,84 +429,66 @@
     }
 
     setLoading(true);
+    console.log('[Login] Enviando credenciales a', ENDPOINTS.barberias + '/login');
 
     try {
-      const res = await fetch(`${API_BASE_URL}/barberias/login`, {
+      const res = await fetch(`${ENDPOINTS.barberias}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, contrasenia: password }),
       });
 
+      console.log('[Login] Respuesta del servidor:', res.status);
+
       if (res.ok) {
         const data = await res.json();
-        
-        // Save token (JWT)
-        const remember = document.getElementById('rememberMe')?.checked;
-        setAuthToken(data.token, remember);
-        
-        localStorage.setItem('adminEmail', email);
-        if (data?.nombreNegocio) localStorage.setItem('adminNombre', data.nombreNegocio);
-        
-        // FLAG requerido por panel-turnos.html para verificar sesión activa
-        localStorage.setItem('adminLoggedIn', 'true');
+        console.log('[Login] Login exitoso. Datos recibidos:', {
+          id: data?.id,
+          slug: data?.slug,
+          hasToken: !!data?.token,
+        });
 
-        // Needed for panel-turnos.js API calls
-        sessionStorage.setItem('barberia_admin', JSON.stringify({ id: data.id, slug: data.slug }));
-        
-        if (remember) {
-          localStorage.setItem('rememberAdmin', 'true');
+        // Validar que el backend devolvió al menos un id
+        if (!data || !data.id) {
+          showError('Respuesta inesperada del servidor. Contactá al administrador.');
+          setLoading(false);
+          return;
         }
 
+        const remember = document.getElementById('rememberMe')?.checked;
+
+        // ── GUARDAR SESIÓN (función unificada, sin riesgo de guardar undefined) ──
+        saveBarberiaSession(data, remember);
+        console.log('[Login] Sesión guardada. Redirigiendo al panel...');
+
+        // Feedback visual de éxito
         btnLogin.innerHTML = '<i class="bi bi-check-circle me-2"></i> ¡Acceso concedido!';
         btnLogin.style.background = 'linear-gradient(135deg,#4caf7d,#7dcfa0)';
-        setTimeout(() => { window.location.href = './panel-turnos.html'; }, 800);
+
+        // ── REDIRIGIR — usar replace() para no agregar al historial y evitar loops ──
+        setTimeout(() => { window.location.replace(ADMIN_PANEL_URL); }, 700);
 
       } else {
+        console.warn('[Login] Credenciales rechazadas. Status:', res.status);
         showError('Credenciales incorrectas. Verificá tu email y contraseña.');
         setLoading(false);
       }
     } catch (err) {
+      console.error('[Login] Error de red:', err);
       showError('Error de conexión con el servidor. Verificá que el backend esté activo.');
       setLoading(false);
     }
   });
 
-  // Auto-fill remember
+  // ── Auto-fill "recuérdame" ────────────────────────────────────────────────
   if (localStorage.getItem('rememberAdmin') === 'true') {
     const savedEmail = localStorage.getItem('adminEmail');
     if (savedEmail) {
       emailInput.value = savedEmail;
       document.getElementById('rememberMe').checked = true;
+      console.log('[Login] Email pre-llenado desde "recuérdame".');
     }
   }
-
-  // Redirige a panel-turnos solo si hay un token vigente (no expirado).
-  // Evita el bucle de redirección cuando el token existe pero está vencido.
-  (function checkExistingSession() {
-    const token = getAuthToken();
-    if (!token) return; // No hay token, mostrar login normalmente
-
-    try {
-      // Decodificar el payload del JWT (sin verificar firma — eso lo hace el backend)
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      const nowSec  = Math.floor(Date.now() / 1000);
-
-      if (payload.exp && payload.exp > nowSec) {
-        // Token vigente → ir al panel
-        window.location.href = './panel-turnos.html';
-      } else {
-        // Token expirado → limpiarlo para que el usuario vea el login normal
-        setAuthToken(null);
-        localStorage.removeItem('jwt_token');
-        sessionStorage.removeItem('jwt_token');
-      }
-    } catch (_) {
-      // Token malformado → limpiar
-      localStorage.removeItem('jwt_token');
-      sessionStorage.removeItem('jwt_token');
-    }
-  })();
-
 
   // Clear error on input
   [emailInput, passInput].forEach(inp => {
