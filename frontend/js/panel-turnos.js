@@ -1,7 +1,7 @@
 // BUG #1 FIX: Added requireAuth and getBarberiaSession imports.
 // requireAuth() is the single guard that checks sessionStorage (+ localStorage "recuérdame")
 // and redirects to login only when the session is genuinely absent.
-import { API_BASE_URL, ENDPOINTS, HORARIOS_LABORALES, getAuthHeaders, requireAuth, getBarberiaSession } from "./config.js";
+import { API_BASE_URL, ENDPOINTS, HORARIOS_LABORALES, getAuthHeaders, requireAuth, getBarberiaSession, clearBarberiaSession, ADMIN_LOGIN_URL } from "./config.js";
 
 // Llamadas a la API
 class ApiService {
@@ -47,13 +47,12 @@ class ApiService {
                 case 404: // NOT FOUND
                     throw new Error(`Resource not found (404)`);
                     
-                case 403: // FORBIDDEN
-                    // Log out user
-                    localStorage.removeItem('adminLoggedIn');
-                    localStorage.removeItem('adminEmail');
-                    localStorage.removeItem('adminNombre');
-                    sessionStorage.removeItem('barberia_admin');
-                    window.location.href = './login.html';
+                           case 403: // FORBIDDEN
+                    // Logout completo: si no se limpia también el backup de
+                    // "recuérdame" (rememberAdmin + barberia_session en localStorage),
+                    // login.html lo restaura y vuelve a mandar al panel → bucle infinito.
+                    clearBarberiaSession();
+                    window.location.replace(ADMIN_LOGIN_URL);
                     throw new Error("Cuenta desactivada. Redirigiendo al login...");
 
                 case 400: // BAD REQUEST
