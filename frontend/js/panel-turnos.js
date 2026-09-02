@@ -1,7 +1,7 @@
 // BUG #1 FIX: Added requireAuth and getBarberiaSession imports.
 // requireAuth() is the single guard that checks sessionStorage (+ localStorage "recuérdame")
 // and redirects to login only when the session is genuinely absent.
-import { API_BASE_URL, ENDPOINTS, HORARIOS_LABORALES, getAuthHeaders, requireAuth, getBarberiaSession } from "./config.js";
+import { API_BASE_URL, ENDPOINTS, HORARIOS_LABORALES, getAuthHeaders, requireAuth, getBarberiaSession, clearBarberiaSession, ADMIN_LOGIN_URL } from "./config.js";
 
 // Llamadas a la API
 class ApiService {
@@ -47,13 +47,12 @@ class ApiService {
                 case 404: // NOT FOUND
                     throw new Error(`Resource not found (404)`);
                     
-                case 403: // FORBIDDEN
-                    // Log out user
-                    localStorage.removeItem('adminLoggedIn');
-                    localStorage.removeItem('adminEmail');
-                    localStorage.removeItem('adminNombre');
-                    sessionStorage.removeItem('barberia_admin');
-                    window.location.href = './login.html';
+                           case 403: // FORBIDDEN
+                    // Logout completo: si no se limpia también el backup de
+                    // "recuérdame" (rememberAdmin + barberia_session en localStorage),
+                    // login.html lo restaura y vuelve a mandar al panel → bucle infinito.
+                    clearBarberiaSession();
+                    window.location.replace(ADMIN_LOGIN_URL);
                     throw new Error("Cuenta desactivada. Redirigiendo al login...");
 
                 case 400: // BAD REQUEST
@@ -336,6 +335,14 @@ class TurnosManager {
             }
         });
 
+        // Listener en editarFecha: recarga horarios disponibles al cambiar fecha en el modal
+        const editarFechaEl = document.getElementById('editarFecha');
+        if (editarFechaEl) {
+            editarFechaEl.addEventListener('change', () => {
+                this.actualizarHorariosDisponibles(editarFechaEl.value);
+            });
+        }
+
         // Exponer funciones globales necesarias
         this.exposeGlobalFunctions();
     }
@@ -354,17 +361,16 @@ class TurnosManager {
         window.cambiarPagina = (pag) => { this.currentPage = pag; this.mostrarTurnos(); };
         window.cambiarItemsPorPagina = (select) => { this.itemsPerPage = parseInt(select.value); this.currentPage = 1; this.mostrarTurnos(); };
         
-        // Asociar evento de submit al formConfiguracion si existe
-        const formConfig = document.getElementById('formConfiguracion');
-        if (formConfig) {
-            formConfig.addEventListener('submit', window.guardarConfiguracion);
-        }
+        // NOTA: El submit de formConfiguracion es manejado exclusivamente
+        // por el listener del DOMContentLoaded (línea ~1351) para evitar doble request.
     }
 
     async guardarConfiguracion(e) {
         if (e) e.preventDefault();
-        
-        if (!this.barberiaId) {
+
+        // Obtener id desde la sesión unificada (soporta "recuérdame")
+        const barberiaId = getBarberiaSession()?.id;
+        if (!barberiaId) {
             NotificationService.showError("No hay sesión activa.");
             return;
         }
@@ -377,22 +383,17 @@ class TurnosManager {
             const btn = document.getElementById('btnGuardarConfig');
             if (btn) btn.disabled = true;
 
-            const res = await fetch(`${ENDPOINTS.barberias}/${this.barberiaId}/config`, {
+            const res = await fetch(`${ENDPOINTS.barberias}/${barberiaId}/config`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    horaInicio,
-                    horaFin,
-                    intervaloMinutos
-                })
+                body: JSON.stringify({ horaInicio, horaFin, intervaloMinutos })
             });
 
             if (!res.ok) throw new Error("Error al guardar configuración");
 
-            // Guardar localmente para disponibilidad inmediata (opcional)
             const payload = { horaInicio, horaFin, intervaloMinutos };
-            localStorage.setItem("barberiaConfig_" + this.barberiaId, JSON.stringify(payload));
-            
+            localStorage.setItem("barberiaConfig_" + barberiaId, JSON.stringify(payload));
+
             NotificationService.show("Configuración guardada con éxito", "success");
         } catch (error) {
             console.error(error);
@@ -515,7 +516,8 @@ class TurnosManager {
     mostrarTurnos() {
         if (!this.turnosData) this.turnosData = [];
         const turnosFiltrados = this.aplicarFiltrosData();
-        const tbody = document.getElementById('tabla-turnos');
+        // FIX: usar el <tbody> correcto, no el <table>
+        const tbody = document.getElementById('tabla-turnos-body');
         const totalTurnos = document.getElementById('total-turnos');
         const estadisticasTotalTurnos = document.getElementById('stats-total');
         const statsConfirmados = document.getElementById('stats-confirmados');
@@ -525,15 +527,14 @@ class TurnosManager {
         if (!tbody) return;
 
         tbody.innerHTML = '';
-        
-        // Calcular estadísticas
-        if (totalTurnos) {
-            totalTurnos.textContent = `${turnosFiltrados.length} turnos`;
-            estadisticasTotalTurnos.textContent = `${turnosFiltrados.length}`;
-        }
 
-        const confirmados = turnosFiltrados.filter(t => t.estado === 'confirmado').length;
-        const pendientes = turnosFiltrados.filter(t => t.estado === 'pendiente').length;
+        // Calcular estadísticas
+        if (totalTurnos) totalTurnos.textContent = `${turnosFiltrados.length} turnos`;
+        if (estadisticasTotalTurnos) estadisticasTotalTurnos.textContent = `${turnosFiltrados.length}`;
+
+        // FIX: comparar con estados en MAYÚSCULAS (modelo siempre devuelve uppercase)
+        const confirmados = turnosFiltrados.filter(t => t.estado === 'COMPLETADO').length;
+        const pendientes  = turnosFiltrados.filter(t => t.estado === 'PENDIENTE').length;
         
         const ingresosHoy = turnosFiltrados.reduce((total, t) => {
             const hoy = new Date();
@@ -790,10 +791,12 @@ class TurnosManager {
         }
         }
         
-        // Filtro por estado
+        // Filtro por estado — comparación case-insensitive (tabs HTML usan minusculas, modelo usa MAYUSCULAS)
         const filtroEstado = document.getElementById('filtro-estado')?.value;
         if (filtroEstado && filtroEstado !== 'todos') {
-            turnosFiltrados = turnosFiltrados.filter(t => t.estado === filtroEstado);
+            turnosFiltrados = turnosFiltrados.filter(t =>
+                t.estado.toLowerCase() === filtroEstado.toLowerCase()
+            );
         }
         
         // Filtro por servicio
@@ -1116,80 +1119,89 @@ class TurnosManager {
     }
 
     generarCalendario() {
-        const container = document.getElementById('calendario-container');
+        // FIX: ID corregido de 'calendario-container' a 'calendario-grid'
+        const container = document.getElementById('calendario-grid');
         if (!container) return;
 
         const year = this.fechaActualCalendario.getFullYear();
         const month = this.fechaActualCalendario.getMonth();
-        
+
         const primerDia = new Date(year, month, 1);
         const ultimoDia = new Date(year, month + 1, 0);
         const diasEnMes = ultimoDia.getDate();
         const primerDiaSemana = primerDia.getDay();
-        
-        let html = '<div class="calendario-grid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: #333;">';
-        
+
+        // Escribir directamente en #calendario-grid (que ya tiene la clase con display:grid)
+        let html = '';
+
         // Encabezados de días
         const diasSemana = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
         diasSemana.forEach(dia => {
-            html += `<div class="calendario-header text-center py-2 bg-secondary text-white fw-bold">${dia}</div>`;
+            html += `<div class="calendario-header">${dia}</div>`;
         });
-        
+
         // Días vacíos al inicio
         for (let i = 0; i < primerDiaSemana; i++) {
-            html += '<div class="calendario-dia bg-dark" style="min-height: 80px;"></div>';
+            html += '<div class="calendario-dia"></div>';
         }
-        
+
         // Días del mes
+        const hoyStr = new Date().toDateString();
         for (let dia = 1; dia <= diasEnMes; dia++) {
             const fechaDia = `${year}-${String(month + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
             const turnosDelDia = this.turnosData.filter(t => t.fecha === fechaDia);
-            const esHoy = new Date().toDateString() === new Date(year, month, dia).toDateString();
-            
+            const esHoy = hoyStr === new Date(year, month, dia).toDateString();
+
             html += `
-                <div class="calendario-dia bg-dark p-1 ${esHoy ? 'border border-warning' : ''}" 
-                     style="min-height: 80px; cursor: pointer; transition: background-color 0.2s;" 
-                     onclick="seleccionarDia('${fechaDia}')"
-                     onmouseover="this.style.backgroundColor='#333'"
-                     onmouseout="this.style.backgroundColor='#1c1c1c'">
-                    <div class="text-white fw-bold mb-1">${dia}</div>
-                    ${turnosDelDia.map(t => 
-                        `<div class="small badge me-1 mb-1" style="background-color: ${this.getColorEstado(t.estado)}; font-size: 0.6rem;">
-                            ${t.hora}
-                        </div>`
+                <div class="calendario-dia${esHoy ? ' hoy' : ''}" onclick="seleccionarDia('${fechaDia}')">
+                    <div class="text-white fw-bold mb-1" style="font-size:0.85rem;">${dia}</div>
+                    ${turnosDelDia.map(t =>
+                        `<div class="badge mb-1 d-block text-truncate" style="background:${this.getColorEstado(t.estado)};font-size:0.65rem;">${t.hora}</div>`
                     ).join('')}
                 </div>
             `;
         }
-        
-        html += '</div>';
+
         container.innerHTML = html;
     }
 
     getColorEstado(estado) {
+        // FIX: estados en MAYUSCULAS (TurnoModel siempre devuelve uppercase)
         const colores = {
-            'confirmado': '#28a745',
-            'pendiente': '#ffc107',
-            'cancelado': '#dc3545'
+            'COMPLETADO': '#10b981',
+            'PENDIENTE':  '#f59e0b',
+            'CANCELADO':  '#ef4444',
+            'NO_ASISTIO': '#94a3b8',
+            // Compatibilidad con valores legados en minúsculas
+            'confirmado': '#10b981',
+            'pendiente':  '#f59e0b',
+            'cancelado':  '#ef4444'
         };
-        return colores[estado] || '#6c757d';
+        return colores[estado] || '#64748b';
     }
 
     seleccionarDia(fecha) {
         const turnosDelDia = this.turnosData.filter(t => t.fecha === fecha);
-        const fechaFormateada = new Date(fecha).toLocaleDateString('es-ES', {
+        // Construir fecha local para evitar desfase de zona horaria
+        const [y, m, d] = fecha.split('-').map(Number);
+        const fechaFormateada = new Date(y, m - 1, d).toLocaleDateString('es-ES', {
             weekday: 'long',
             year: 'numeric',
             month: 'long',
             day: 'numeric'
         });
-        
-        const fechaSeleccionada = document.getElementById('fecha-seleccionada');
+
+        // FIX: IDs correctos del HTML
+        const detalleDia = document.getElementById('detalle-dia');
+        if (detalleDia) detalleDia.style.display = 'block';
+
+        const fechaSeleccionada = document.getElementById('detalle-dia-titulo');
         if (fechaSeleccionada) {
-            fechaSeleccionada.textContent = fechaFormateada;
+            fechaSeleccionada.textContent =
+                fechaFormateada.charAt(0).toUpperCase() + fechaFormateada.slice(1);
         }
-        
-        const container = document.getElementById('turnos-dia');
+
+        const container = document.getElementById('detalle-dia-turnos');
         if (!container) return;
 
         if (turnosDelDia.length === 0) {
@@ -1315,9 +1327,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // ── Configuración: cargar y guardar horarios ──────────────────────────────
     async function cargarConfiguracion() {
         try {
-            const session = sessionStorage.getItem('barberia_admin');
+            // FIX: usar getBarberiaSession() para soportar "recuérdame" (localStorage fallback)
+            const session = getBarberiaSession();
             if (!session) return;
-            const { slug } = JSON.parse(session);
+            const { slug } = session;
             const { API_BASE_URL } = await import('./config.js');
             const res = await fetch(`${API_BASE_URL}/barberias/slug/${slug}`);
             if (!res.ok) return;
@@ -1354,9 +1367,10 @@ document.addEventListener('DOMContentLoaded', () => {
         formConfig.addEventListener('submit', async (e) => {
             e.preventDefault();
             try {
-                const session = sessionStorage.getItem('barberia_admin');
+                // FIX: usar getBarberiaSession() para soportar "recuérdame"
+                const session = getBarberiaSession();
                 if (!session) return;
-                const { id } = JSON.parse(session);
+                const { id } = session;
                 const payload = {
                     horaInicio:       document.getElementById('configHoraInicio')?.value,
                     horaFin:          document.getElementById('configHoraFin')?.value,
@@ -1379,6 +1393,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    // FIX: exponer sortTable al window para los onclick de los <th>
+    window.sortTable = sortTable;
 
     // Activar Vista Lista por defecto
     window.cambiarVista('lista');

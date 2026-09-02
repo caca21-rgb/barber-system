@@ -146,6 +146,8 @@
       transition: color 0.25s;
     }
     .input-icon-group .form-control { padding-left: 3rem; }
+    /* El ícono está DESPUÉS del input en el DOM → el selector ~ funciona correctamente */
+    .input-icon-group .form-control:focus + .input-icon,
     .input-icon-group .form-control:focus ~ .input-icon { color: #818cf8; }
     .toggle-password {
       position: absolute;

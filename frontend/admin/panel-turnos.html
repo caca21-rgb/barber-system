@@ -148,6 +148,35 @@
       align-items: center; gap: 1rem;
     }
     @media (max-width:991px) { .mobile-header { display: flex; } }
+
+    /* ── Calendario grid ── */
+    .calendario-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 1px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .calendario-header {
+      padding: 0.5rem;
+      text-align: center;
+      font-weight: 600;
+      font-size: 0.78rem;
+      color: var(--muted);
+      background: rgba(15,23,42,0.9);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .calendario-dia {
+      min-height: 80px;
+      background: rgba(15,23,42,0.6);
+      padding: 0.35rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .calendario-dia:hover { background: rgba(99,102,241,0.12); }
+    .calendario-dia.hoy { border: 1px solid rgba(251,191,36,0.5); }
   </style>
 </head>
 <body class="admin-panel">
@@ -484,7 +513,7 @@
 
 <!-- ── Edit Modal ── -->
 <div class="modal fade" id="modalEditarTurno" tabindex="-1" aria-labelledby="modalEditarTurnoLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="modalEditarTurnoLabel">
@@ -493,27 +522,52 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-        <input type="hidden" id="edit-turno-id" />
-        <div class="mb-3">
-          <label class="form-label">Fecha</label>
-          <input type="date" class="form-control" id="edit-fecha" />
-        </div>
-        <div class="mb-3">
-          <label class="form-label">Hora</label>
-          <input type="time" class="form-control" id="edit-hora" />
-        </div>
-        <div class="mb-3">
-          <label class="form-label">Estado</label>
-          <select class="form-select" id="edit-estado">
-            <option value="PENDIENTE">⏳ Pendiente</option>
-            <option value="COMPLETADO">✅ Completado</option>
-            <option value="CANCELADO">❌ Cancelado</option>
-            <option value="NO_ASISTIO">🚫 No asistió</option>
-          </select>
-        </div>
-        <div class="mb-3">
-          <label class="form-label">Notas</label>
-          <textarea class="form-control" id="edit-notas" rows="2" placeholder="Observaciones opcionales..."></textarea>
+        <input type="hidden" id="editarTurnoId" />
+        <div class="row g-3">
+          <!-- Fecha y hora -->
+          <div class="col-md-6">
+            <label class="form-label">Fecha</label>
+            <input type="date" class="form-control" id="editarFecha" />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Hora disponible</label>
+            <select class="form-select" id="editarHora">
+              <option value="">Seleccionar hora</option>
+            </select>
+          </div>
+          <!-- Cliente -->
+          <div class="col-md-6">
+            <label class="form-label">Nombre</label>
+            <input type="text" class="form-control" id="editarNombre" placeholder="Nombre del cliente" />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Apellido</label>
+            <input type="text" class="form-control" id="editarApellido" placeholder="Apellido del cliente" />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Teléfono</label>
+            <input type="tel" class="form-control" id="editarTelefono" placeholder="Ej: 1123456789" />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Email <small class="text-muted">(opcional)</small></label>
+            <input type="email" class="form-control" id="editarEmail" placeholder="cliente@email.com" />
+          </div>
+          <!-- Servicio y estado -->
+          <div class="col-md-6">
+            <label class="form-label">Servicio</label>
+            <select class="form-select" id="editarServicio">
+              <option value="">Seleccionar servicio</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Estado</label>
+            <select class="form-select" id="editarEstado">
+              <option value="PENDIENTE">⏳ Pendiente</option>
+              <option value="COMPLETADO">✅ Completado</option>
+              <option value="CANCELADO">❌ Cancelado</option>
+              <option value="NO_ASISTIO">🚫 No asistió</option>
+            </select>
+          </div>
         </div>
       </div>
       <div class="modal-footer">
@@ -604,6 +658,16 @@
         <button type="button" class="btn-ghost" data-bs-dismiss="modal">Cancelar</button>
         <button type="button" class="btn-primario" id="btnConfirmarAccion" onclick="window.confirmarAccionCb && window.confirmarAccionCb()">Confirmar</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Toast de notificaciones ── -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index:1200;">
+  <div id="notificationToast" class="toast align-items-center border-0" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="3500">
+    <div class="d-flex">
+      <div class="toast-body fw-500" id="toastMessage">Notificación</div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Cerrar"></button>
     </div>
   </div>
 </div>
