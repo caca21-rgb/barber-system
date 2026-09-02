@@ -1,4 +1,7 @@
-import { API_BASE_URL, ENDPOINTS, HORARIOS_LABORALES, getAuthHeaders } from "./config.js";
+// BUG #1 FIX: Added requireAuth and getBarberiaSession imports.
+// requireAuth() is the single guard that checks sessionStorage (+ localStorage "recuérdame")
+// and redirects to login only when the session is genuinely absent.
+import { API_BASE_URL, ENDPOINTS, HORARIOS_LABORALES, getAuthHeaders, requireAuth, getBarberiaSession } from "./config.js";
 
 // Llamadas a la API
 class ApiService {
@@ -7,8 +10,14 @@ class ApiService {
             'Content-Type': 'application/json',
             'Accept': 'application/json'
         };
-        const session = sessionStorage.getItem('barberia_admin');
-        this.barberiaId = session ? JSON.parse(session).id : null;
+        // BUG #1 FIX (was): const session = sessionStorage.getItem('barberia_admin');
+        //                    this.barberiaId = session ? JSON.parse(session).id : null;
+        // Problem: reading sessionStorage directly misses the "recuérdame" fallback in
+        // localStorage, so after a page refresh the id was null → threw "No session".
+        // Fix: use getBarberiaSession() which checks sessionStorage first, then
+        // localStorage (when rememberAdmin=true), and reconstructs the session.
+        const session = getBarberiaSession();
+        this.barberiaId = session ? session.id : null;
     }
 
     async makeRequest(url, options = {}) {
@@ -1249,6 +1258,14 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error('Bootstrap no está cargado');
         return;
     }
+
+    // BUG #1 FIX: Guard the entire init block with requireAuth().
+    // requireAuth() reads getBarberiaSession() (sessionStorage + localStorage fallback).
+    // If no valid session exists it immediately redirects to login via window.location.replace()
+    // and returns null, stopping TurnosManager from being constructed with a null barberiaId
+    // (which was the source of the "No session" throws and the subsequent redirect loop).
+    const _authSession = requireAuth();
+    if (!_authSession) return; // requireAuth already redirected to login
 
     const fechaInput = document.getElementById('editarFecha');
     if (fechaInput) fechaInput.min = new Date().toISOString().split('T')[0];
