@@ -433,12 +433,19 @@
     setLoading(true);
     console.log('[Login] Enviando credenciales a', ENDPOINTS.barberias + '/login');
 
+    // Hint para cold starts de Render (después de 4 segundos)
+    const renderColdStartHint = setTimeout(() => {
+      btnLogin.innerHTML = '<span class="spinner-xs me-2"></span> Despertando servidor (1 min)...';
+    }, 4000);
+
     try {
       const res = await fetch(`${ENDPOINTS.barberias}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, contrasenia: password }),
       });
+
+      clearTimeout(renderColdStartHint);
 
       console.log('[Login] Respuesta del servidor:', res.status);
 
@@ -476,6 +483,7 @@
         setLoading(false);
       }
     } catch (err) {
+      clearTimeout(renderColdStartHint);
       console.error('[Login] Error de red:', err);
       showError('Error de conexión con el servidor. Verificá que el backend esté activo.');
       setLoading(false);
